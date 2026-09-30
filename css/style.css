@@ -79,16 +79,23 @@ a { color: inherit; text-decoration: none; }
   z-index: 10;
 }
 
+/* node 56:40: a 132px text box, then the envelope starting at x≈162.9 —
+   right after the text, not pushed to the far edge */
 .home-nav {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  gap: 30.9px;
+  height: 21px;
 }
 
 .home-nav span {
+  flex: none;
+  width: 132px;
+  white-space: nowrap;
   font-family: var(--font-serif);
   font-weight: 400;
   font-size: 15px;
+  line-height: 1.4;
   letter-spacing: 0.75px;
   color: var(--dark-gray);
 }
@@ -96,7 +103,7 @@ a { color: inherit; text-decoration: none; }
 /* Figma applies a vertical flip + 180deg rotation to this icon (net effect:
    a horizontal mirror of the raw asset) — replicated here so the envelope's
    angled flap matches the design instead of running backwards. */
-.home-nav svg { width: 19px; height: 13px; transform: scaleX(-1); }
+.home-nav svg { flex: none; width: 18.88px; height: 13px; transform: scaleX(-1); }
 
 .home-title {
   font-family: var(--font-title);
@@ -160,56 +167,37 @@ a { color: inherit; text-decoration: none; }
 .home-mirror-2 { left: -77px; top: 223px; width: 360px; height: 360px; z-index: 2; }
 .home-mirror-3 { left: 156px; top: 182px; width: 273px; height: 273px; z-index: 3; }
 
-/* staggered blinking on the mirror portraits: there's no "eyes closed" art
-   for these (neither drawn nor in Figma), so a small closed-eye mark is
-   painted directly over each portrait's own eyes — positioned from the
-   actual eye-dot coordinates found in each source SVG. Each mirror runs
-   its own distinct duration/delay so the three never blink in sync. */
-.mirror-eye {
+/* mirror blinks: each portrait's eye dots were pulled out of its SVG into an
+   open-eye layer, alongside a closed-eye layer drawn at Figma's size (nodes
+   74:566/74:567 — 2x1 and 3x1px at the 402px mirror). Both layers share the
+   portrait's 576-unit canvas, so the smaller mirrors scale proportionally.
+   A blink hard-swaps the two, so the dot is replaced by the line rather than
+   the line sitting on top of it. */
+.mirror-eyes {
   position: absolute;
-  width: 3.2%;
-  height: 0.55%;
-  min-height: 1px;
-  background: #231f20;
-  border-radius: 2px;
-  transform: translate(-50%, -50%);
-  opacity: 0;
+  inset: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 
-.home-mirror-1 .mirror-eye-left  { left: 48.52%; top: 46.23%; }
-.home-mirror-1 .mirror-eye-right { left: 53.64%; top: 46.23%; }
-.home-mirror-2 .mirror-eye-left  { left: 48.47%; top: 47.80%; }
-.home-mirror-2 .mirror-eye-right { left: 53.70%; top: 47.80%; }
-.home-mirror-3 .mirror-eye-left  { left: 47.09%; top: 45.46%; }
-.home-mirror-3 .mirror-eye-right { left: 52.91%; top: 45.46%; }
+.mirror-eyes-closed { opacity: 0; }
 
-/* all three share one 6s cycle with the blink window baked directly into
-   each mirror's own keyframe percentages, evenly spaced 2s apart — unlike
-   animation-delay (which only offsets when a cycle starts and can drift
-   into overlapping with another mirror's window depending on load timing),
-   fixed keyframe positions guarantee the three windows can never coincide. */
-.home-mirror-1 .mirror-eye { animation: mirror-blink-1 6s ease-in-out infinite; }
-.home-mirror-2 .mirror-eye { animation: mirror-blink-2 6s ease-in-out infinite; }
-.home-mirror-3 .mirror-eye { animation: mirror-blink-3 6s ease-in-out infinite; }
+/* one shared 6s cycle; each mirror's blink window is fixed at a different
+   point in it (evenly 2s apart) so the three can never blink together */
+.home-mirror-1 .mirror-eyes-open   { animation: mirror-open-1 6s linear infinite; }
+.home-mirror-1 .mirror-eyes-closed { animation: mirror-closed-1 6s linear infinite; }
+.home-mirror-2 .mirror-eyes-open   { animation: mirror-open-2 6s linear infinite; }
+.home-mirror-2 .mirror-eyes-closed { animation: mirror-closed-2 6s linear infinite; }
+.home-mirror-3 .mirror-eyes-open   { animation: mirror-open-3 6s linear infinite; }
+.home-mirror-3 .mirror-eyes-closed { animation: mirror-closed-3 6s linear infinite; }
 
-@keyframes mirror-blink-1 {
-  0%, 9%       { opacity: 0; }
-  9.01%, 13%   { opacity: 1; }
-  13.01%, 100% { opacity: 0; }
-}
-
-@keyframes mirror-blink-2 {
-  0%, 42%      { opacity: 0; }
-  42.01%, 46%  { opacity: 1; }
-  46.01%, 100% { opacity: 0; }
-}
-
-@keyframes mirror-blink-3 {
-  0%, 75%      { opacity: 0; }
-  75.01%, 79%  { opacity: 1; }
-  79.01%, 100% { opacity: 0; }
-}
+@keyframes mirror-open-1   { 0%, 9% { opacity: 1; } 9.01%, 13% { opacity: 0; } 13.01%, 100% { opacity: 1; } }
+@keyframes mirror-closed-1 { 0%, 9% { opacity: 0; } 9.01%, 13% { opacity: 1; } 13.01%, 100% { opacity: 0; } }
+@keyframes mirror-open-2   { 0%, 42% { opacity: 1; } 42.01%, 46% { opacity: 0; } 46.01%, 100% { opacity: 1; } }
+@keyframes mirror-closed-2 { 0%, 42% { opacity: 0; } 42.01%, 46% { opacity: 1; } 46.01%, 100% { opacity: 0; } }
+@keyframes mirror-open-3   { 0%, 75% { opacity: 1; } 75.01%, 79% { opacity: 0; } 79.01%, 100% { opacity: 1; } }
+@keyframes mirror-closed-3 { 0%, 75% { opacity: 0; } 75.01%, 79% { opacity: 1; } 79.01%, 100% { opacity: 0; } }
 
 /* main character (node 56:41). On the home frame Figma places this node as a
    horizontally flipped frame at x=249, i.e. rendered across x -11..249 — so

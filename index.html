@@ -13,15 +13,13 @@
     <div class="home-text">
       <div class="home-nav">
         <span>Exhibition - Dream</span>
-        <a href="archive/" aria-label="View public envelope archive">
-          <svg viewBox="0 0 18.9492 13.25" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <svg viewBox="0 0 18.9492 13.25" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <path d="M18.898 0.914679L18.9388 1.00171L18.9425 13.1115C18.9186 13.1819 18.877 13.2252 18.8091 13.2499H0.198351C0.130515 13.2252 0.088851 13.1819 0.0649923 13.1115L0.0607192 1.01151L0.118941 0.905809C6.37862 0.908765 12.6383 0.911722 18.898 0.914494V0.914679ZM0.990671 1.25672C0.816539 1.24138 0.624245 1.26799 0.447977 1.25672V12.6494L8.27609 6.57415L1.70946 1.52614C1.50292 1.3894 1.23638 1.27834 0.990493 1.25672H0.990671ZM18.5595 1.25672H18.0346C17.8272 1.25672 17.4916 1.41009 17.3157 1.52614C16.7167 1.92121 16.0964 2.46578 15.5156 2.90779C13.9879 4.07066 12.4385 5.22705 10.9214 6.41172C10.8993 6.42891 10.7221 6.56011 10.7314 6.57415L18.5595 12.6309V1.25672ZM0.839329 12.8523H18.1502L10.0892 6.56676C9.72292 6.32986 9.28332 6.32191 8.91814 6.56676L0.839329 12.8523Z" fill="black"/>
             <path d="M0.839465 12.8523L8.91828 6.56676C9.28346 6.32173 9.72324 6.32986 10.0893 6.56676L18.1503 12.8523H0.839465Z" fill="white"/>
             <path d="M0.990826 1.25672C1.23671 1.27834 1.50325 1.3894 1.70979 1.52614L8.27643 6.57415L0.448132 12.6492V1.25672C0.624223 1.26799 0.816694 1.24138 0.990826 1.25672Z" fill="white"/>
             <path d="M18.5594 1.25672V12.6309L10.7313 6.57415C10.7222 6.56011 10.8994 6.42891 10.9213 6.41172C12.4384 5.22705 13.9878 4.07047 15.5155 2.90779C16.0963 2.46578 16.7166 1.92122 17.3155 1.52614C17.4915 1.41009 17.8271 1.25672 18.0345 1.25672H18.5594Z" fill="white"/>
             <path d="M0.592757 1.17874C0.548066 1.17061 0.257668 1.12608 0.25019 1.03257C0.23737 0.871255 1.07491 0.677413 1.35303 0.612923C3.65716 0.0792577 9.25094 0.286958 9.69927 0.303404C13.0137 0.424625 14.1334 0.294165 16.9144 0.678337C17.5598 0.767589 18.0945 0.856841 18.465 0.922256C18.6026 0.925582 18.6546 0.970485 18.6778 1.00504C18.9468 1.40769 16.6512 3.27958 12.049 7.00711C11.6222 7.35266 10.8922 7.9279 9.87661 7.96412C8.96891 7.99646 8.23855 7.58383 7.82708 7.29611C2.97167 2.70028 1.118 1.27372 0.592757 1.17874Z" fill="white" stroke="#231F20" stroke-width="0.5" stroke-miterlimit="10"/>
           </svg>
-        </a>
       </div>
 
       <h1 class="home-title">WHAT DO YOU
@@ -33,21 +31,22 @@ IN THE FUTURE</h1>
 
     <!-- mirrors: node 56:289/56:349/56:257 — each wrapped so a border ring
          can be drawn exactly on the visible circle's own edge, since the
-         source SVGs pad the drawn circle to ~57% of their square canvas -->
-    <div class="home-mirror-wrap home-mirror-1">
-      <img class="home-mirror" src="assets/mirror-char-06.svg" alt="" aria-hidden="true" />
-      <span class="mirror-eye mirror-eye-left"></span>
-      <span class="mirror-eye mirror-eye-right"></span>
+         source SVGs pad the drawn circle to ~57% of their square canvas.
+         The eye dots live in their own layers so a blink swaps dot for line. -->
+    <div class="home-mirror-wrap home-mirror-1" aria-hidden="true">
+      <img class="home-mirror" src="assets/mirror-char-06.svg" alt="" />
+      <img class="mirror-eyes mirror-eyes-open" src="assets/mirror-char-06-eyes-open.svg" alt="" />
+      <img class="mirror-eyes mirror-eyes-closed" src="assets/mirror-char-06-eyes-closed.svg" alt="" />
     </div>
-    <div class="home-mirror-wrap home-mirror-2">
-      <img class="home-mirror" src="assets/mirror-char-07.svg" alt="" aria-hidden="true" />
-      <span class="mirror-eye mirror-eye-left"></span>
-      <span class="mirror-eye mirror-eye-right"></span>
+    <div class="home-mirror-wrap home-mirror-2" aria-hidden="true">
+      <img class="home-mirror" src="assets/mirror-char-07.svg" alt="" />
+      <img class="mirror-eyes mirror-eyes-open" src="assets/mirror-char-07-eyes-open.svg" alt="" />
+      <img class="mirror-eyes mirror-eyes-closed" src="assets/mirror-char-07-eyes-closed.svg" alt="" />
     </div>
-    <div class="home-mirror-wrap home-mirror-3">
-      <img class="home-mirror" src="assets/mirror-char-05.svg" alt="" aria-hidden="true" />
-      <span class="mirror-eye mirror-eye-left"></span>
-      <span class="mirror-eye mirror-eye-right"></span>
+    <div class="home-mirror-wrap home-mirror-3" aria-hidden="true">
+      <img class="home-mirror" src="assets/mirror-char-05.svg" alt="" />
+      <img class="mirror-eyes mirror-eyes-open" src="assets/mirror-char-05-eyes-open.svg" alt="" />
+      <img class="mirror-eyes mirror-eyes-closed" src="assets/mirror-char-05-eyes-closed.svg" alt="" />
     </div>
   </div>
 
