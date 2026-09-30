@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Create Your Mirror</title>
+<link rel="stylesheet" href="../css/style.css" />
+</head>
+<body data-page="create">
+
+<main class="screen create">
+  <div class="top-section">
+    <div class="safety-banner">
+      <p>This is a safe, moderated space. No profanity, hate speech, or personally identifying information &middot; Content may be reviewed for safety.</p>
+    </div>
+    <div class="nav-bar">
+      <a class="nav-archive active" href="../archive/">ARCHIVE</a>
+      <a class="nav-label" href="../archive/mine/">My Envelope</a>
+    </div>
+  </div>
+
+  <div class="create-illustration">
+    <img src="../assets/mirror-closed.svg" alt="A closed mirror" />
+  </div>
+
+  <form class="create-form" id="envelopeFormStep1">
+    <h2 class="create-heading">Create your mirror</h2>
+
+    <div class="field">
+      <label for="fieldName">Name</label>
+      <input type="text" id="fieldName" name="name" placeholder="Write your name" autocomplete="off" />
+    </div>
+
+    <div class="field">
+      <label for="fieldPursuit">What did you pursue</label>
+      <div class="textarea-wrap">
+        <textarea id="fieldPursuit" name="pursuit" placeholder="Write freely. This is your safe space" required></textarea>
+        <div class="textarea-toolbar">
+          <span class="icons">
+            <img src="../assets/icon-mic.svg" alt="" aria-hidden="true" />
+            <img src="../assets/icon-paperclip.svg" alt="" aria-hidden="true" />
+          </span>
+          <button type="submit" aria-label="Continue">
+            <img src="../assets/icon-send-arrow.svg" alt="" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <label class="checkbox-row">
+      <input type="checkbox" id="fieldShare" checked />
+      <span class="checkbox-box"><img src="../assets/icon-checkbox.svg" alt="" aria-hidden="true" /></span>
+      <span>Share envelope</span>
+    </label>
+
+    <label class="checkbox-row">
+      <input type="checkbox" id="fieldShowName" checked />
+      <span class="checkbox-box"><img src="../assets/icon-checkbox.svg" alt="" aria-hidden="true" /></span>
+      <span>Show my Name?</span>
+    </label>
+
+    <div class="form-actions">
+      <button class="btn btn-back" type="button" onclick="history.back()">Back</button>
+      <button class="btn btn-write" type="submit">Write</button>
+    </div>
+  </form>
+
+  <footer class="footer">
+    <p>Copyright @2026</p>
+  </footer>
+</main>
+
+<script src="../js/main.js"></script>
+</body>
+</html>

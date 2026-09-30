@@ -1,0 +1,636 @@
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+Pro:wght@400;700&family=Inter:wght@400&family=Bodoni+Moda:wght@400;700&display=swap');
+
+/* ---------- design tokens ---------- */
+:root {
+  --black: #000000;
+  --dark-gray: #424141;
+  --mid-gray: rgba(66, 66, 66, 0.54); /* #424242 at 54% */
+  --white: #ffffff;
+  --off-white: #fdfdfd;
+  --mirror-gold: #e8bf93;
+
+  --font-title: 'Source Sans Pro', sans-serif;
+  --font-serif: 'Bodoni Moda', 'Bodoni 72', Georgia, serif;
+  --font-ui: 'Inter', sans-serif;
+
+  --radius-input: 8px;
+  --radius-pill: 30px;
+  --radius-checkbox: 4px;
+
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--white);
+  color: var(--black);
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  display: flex;
+  justify-content: center;
+  background: #ececec; /* visible only as letterbox on wider viewports */
+  min-height: 100vh;
+}
+
+.screen {
+  width: 100%;
+  max-width: 390px;
+  min-height: 844px;
+  background: var(--white);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+img, svg { display: block; max-width: 100%; }
+button { font-family: inherit; cursor: pointer; background: none; border: none; padding: 0; }
+a { color: inherit; text-decoration: none; }
+
+/* ---------- Screen 1: Home (node 52:7) ---------- */
+/* The Figma frame is exactly 390x844 — the same as `.screen`'s own box —
+   so every element below is positioned with the frame's literal pixel
+   coordinates, no scaling math needed. */
+
+.home {
+  justify-content: flex-start;
+}
+
+.home-hero {
+  position: relative;
+  width: 390px;
+  height: 424px; /* node 52:8 */
+  flex: 0 0 auto;
+}
+
+.home-text {
+  width: 390px;
+  padding: 8px 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+  z-index: 10;
+}
+
+.home-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.home-nav span {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--black);
+}
+
+.home-nav svg { width: 16px; height: 16px; }
+
+.home-title {
+  font-family: var(--font-title);
+  font-weight: 700;
+  font-size: 32px;
+  line-height: 115%;
+  letter-spacing: 3.2px;
+  color: var(--black);
+  width: 342px;
+  max-width: 100%;
+  text-transform: uppercase;
+  margin: 0;
+  white-space: pre-line;
+}
+
+.home-body {
+  font-family: var(--font-title);
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 140%;
+  letter-spacing: 0.75px;
+  color: var(--dark-gray);
+  margin: 0;
+}
+
+/* mirrors: nodes 56:289 (man), 56:349 (curly hair), 56:257 (straight hair) */
+.home-mirror {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+}
+
+.home-mirror-1 { left: 71px; top: 393px; width: 402px; height: 402px; z-index: 1; }
+.home-mirror-2 { left: -77px; top: 223px; width: 360px; height: 360px; z-index: 2; }
+.home-mirror-3 { left: 156px; top: 182px; width: 273px; height: 273px; z-index: 3; }
+
+/* main character — a 2-frame sprite swap between two complete, fully
+   authored illustrations (frame A: hand down, eyes open; frame B: hand
+   raised, eyes closed), instead of positioning separate torso/hand/hair/
+   face/eyes layers by hand. Box uses frame B's own 260x227 canvas; frame A
+   (249x224) stretches ~4% to match, which is not noticeable. */
+.home-character-rig {
+  position: absolute;
+  left: -12px;
+  top: 617px;
+  width: 260px;
+  height: 227px;
+  z-index: 10;
+  animation: home-wave-in .9s ease-out .15s both;
+}
+
+@keyframes home-wave-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.home-char-layer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.home-char-base { z-index: 1; } /* torso/hair/face — never animates */
+
+/* hand: swaps between the two source poses on its own loop — this is the
+   only thing that moves for the wave */
+/* the smooth part: a single continuous, eased rotation applied to BOTH
+   poses at once via their shared parent, pivoting near the shoulder. Since
+   it drives both layers identically, the pose swap underneath never
+   interrupts or jumps the motion — the hand is always swinging smoothly,
+   and its shape just subtly changes at each swing's peak. */
+.home-char-hand-group {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2; /* in front of the base body, behind the eyes */
+  transform-origin: 65% 95%; /* near where the arm meets the shoulder */
+  animation: home-hand-swing 1.8s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+@keyframes home-hand-swing {
+  0%, 100% { transform: rotate(0deg); }
+  25%      { transform: rotate(9deg); }
+  50%      { transform: rotate(0deg); }
+  75%      { transform: rotate(-9deg); }
+}
+
+/* Swapping the hand's actual shape repeatedly *while it's rotating* was
+   the stutter — even as a hard cut with zero overlap, a discrete shape
+   change layered on top of a continuous rotation reads as a hitch. So the
+   rotation now always drives a single unchanging pose (hand-a) — pure
+   CSS transform, nothing else moves, so it's inherently smooth with zero
+   stutter. hand-b only appears for the same brief window as the blink,
+   using the exact same 4.8s cycle/1.6s delay/89-94% keyframes as the eyes
+   below — the one moment the hand's exact shape is allowed to change is
+   masked by attention being on the closing eyes, matching how the two
+   source files were originally paired (hand-pose-B belongs with
+   eyes-closed). */
+.home-char-hand-a {
+  animation: home-eyes-open 4.8s linear infinite;
+  animation-delay: 1.6s;
+}
+
+.home-char-hand-b {
+  opacity: 0;
+  animation: home-eyes-closed 4.8s linear infinite;
+  animation-delay: 1.6s;
+}
+
+/* eyes: swap on their own separate, slower loop — a blink, decoupled from
+   the hand entirely */
+.home-char-eyes { z-index: 3; }
+
+.home-char-eyes-open {
+  animation: home-eyes-open 4.8s linear infinite;
+  animation-delay: 1.6s;
+}
+
+.home-char-eyes-closed {
+  opacity: 0;
+  animation: home-eyes-closed 4.8s linear infinite;
+  animation-delay: 1.6s;
+}
+
+@keyframes home-eyes-open {
+  0%, 89%      { opacity: 1; }
+  89.01%, 94%  { opacity: 0; }
+  94.01%, 100% { opacity: 1; }
+}
+
+@keyframes home-eyes-closed {
+  0%, 89%      { opacity: 0; }
+  89.01%, 94%  { opacity: 1; }
+  94.01%, 100% { opacity: 0; }
+}
+
+.home-cta {
+  position: absolute;
+  left: 214px;
+  top: 776px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: 1px solid var(--black);
+  border-radius: var(--radius-pill);
+  background: var(--white);
+  transition: transform .15s ease;
+  box-sizing: border-box;
+}
+
+.home-cta:active { transform: scale(0.97); }
+
+.home-cta span {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--black);
+  width: 86px;
+}
+
+.home-cta svg { width: 29px; flex: 0 0 auto; }
+
+/* ---------- shared chrome: safety banner + nav bar (screens 2-4) ---------- */
+
+.safety-banner {
+  background: var(--off-white);
+  border-bottom: 1px solid var(--black);
+  padding: 8px 16px;
+}
+
+.safety-banner p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 130%;
+  color: var(--dark-gray);
+  text-align: center;
+}
+
+.nav-bar {
+  border-bottom: 1px solid var(--black);
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-bar .nav-archive,
+.nav-bar .nav-label {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--dark-gray);
+}
+
+.nav-bar .nav-archive.active,
+.nav-bar .nav-label.active {
+  font-weight: 700;
+  letter-spacing: 0.56px;
+  color: var(--black);
+}
+
+.top-section { flex: 0 0 auto; }
+
+.footer {
+  flex: 0 0 auto;
+  text-align: center;
+  padding: 12px 16px 20px;
+}
+
+.footer p {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--dark-gray);
+}
+
+/* ---------- Screen 2: Archive ---------- */
+/* Envelopes scatter as loosely overlapping circles (nodes 52:66, 61:469,
+   63:29, 63:95) instead of a regular grid. JS assigns each one a seeded
+   pseudo-random size/position (stable across reloads for the same data)
+   and positions it absolutely inside .archive-bubbles, whose own height
+   grows to fit however many envelopes exist — the page just gets taller
+   and scrolls, matching how the mock keeps dropping more mirrors in. */
+
+.archive-content {
+  padding: 24px 0 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  flex: 1 1 auto;
+}
+
+.archive-hint {
+  margin: 0;
+  padding: 0 24px;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--mid-gray);
+  text-align: center;
+}
+
+.archive-bubbles {
+  position: relative;
+  width: 100%;
+  flex: 1 1 auto;
+}
+
+.archive-empty {
+  font-family: var(--font-serif);
+  font-size: 13px;
+  color: var(--mid-gray);
+  text-align: center;
+  padding: 64px 24px;
+}
+
+.envelope-bubble {
+  position: absolute;
+  display: block;
+  border-radius: 50%;
+  overflow: hidden;
+  padding: 0;
+  transform: translateY(-70vh);
+  opacity: 0;
+  will-change: transform, opacity, width, height;
+}
+
+.envelope-bubble.dropped {
+  transition: transform .7s cubic-bezier(.34, 1.56, .64, 1), opacity .5s ease;
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.envelope-bubble img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.envelope-bubble .bubble-img-open {
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+
+.envelope-bubble .bubble-img-closed { transition: opacity .3s ease; }
+
+.envelope-bubble.opening .bubble-img-open { opacity: 1; }
+.envelope-bubble.opening .bubble-img-closed { opacity: 0; }
+
+/* peek: hover (desktop) or first tap (touch) grows the envelope in place
+   and names the dream (the "what did you pursue" answer, node 63:66) */
+.envelope-bubble.peeking,
+.envelope-bubble.opening {
+  z-index: 30;
+  transition: transform .35s cubic-bezier(.2, .8, .3, 1.2), width .35s ease, height .35s ease, left .35s ease, top .35s ease;
+}
+
+.envelope-bubble .bubble-label,
+.envelope-bubble .bubble-message {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16%;
+  opacity: 0;
+  transition: opacity .2s ease .1s;
+  pointer-events: none;
+}
+
+.envelope-bubble .bubble-label {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--black);
+  word-break: break-word;
+}
+
+.envelope-bubble .bubble-message {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 135%;
+  color: var(--mirror-gold);
+  word-break: break-word;
+}
+
+.envelope-bubble.peeking .bubble-label,
+.envelope-bubble.opening .bubble-message { opacity: 1; }
+
+.archive-scrim {
+  position: fixed;
+  inset: 0;
+  background: transparent;
+  z-index: 20;
+  display: none;
+}
+
+.archive-scrim.visible { display: block; }
+
+/* ---------- Screens 3 & 4: Create Envelope ---------- */
+
+.create-illustration {
+  width: 390px;
+  padding: 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  overflow: hidden;
+}
+
+/* mirror-closed.svg's circle only fills ~57% of its own square canvas (the
+   rest is transparent margin baked into the file), and node 56:389 in
+   Figma sizes that whole asset at 416px so the drawn circle itself lands
+   at ~236px — matching that means sizing the <img> to the asset's own
+   416px, not to the circle's visible diameter, and letting the ~13px of
+   transparent margin bleed past the 390px screen edge exactly like the
+   Figma frame does (clipped by .screen's own overflow:hidden). */
+.create-illustration img {
+  width: 414px;
+  max-width: none;
+  flex-shrink: 0;
+}
+
+/* mirror reveal (Screen: answering second question, node 52:179) — the
+   closed mirror automatically opens into the carved one a beat after the
+   page loads, as the transition into answering the second question. Sized
+   to match the enlarged closed-mirror illustration above. */
+.mirror-reveal {
+  position: relative;
+  width: 414px;
+  height: 414px;
+}
+
+.mirror-reveal img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.mirror-reveal .mirror-open {
+  opacity: 0;
+  transform: scale(0.9);
+  animation: mirror-open-in .6s ease-out .5s forwards;
+}
+
+.mirror-reveal .mirror-closed {
+  animation: mirror-closed-out .6s ease-out .5s forwards;
+}
+
+@keyframes mirror-open-in {
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes mirror-closed-out {
+  to { opacity: 0; }
+}
+
+.create-form {
+  padding: 0 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1 1 auto;
+}
+
+.create-heading {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 22px;
+  text-align: center;
+  margin: 0;
+}
+
+.field { display: flex; flex-direction: column; gap: 8px; }
+
+.field label {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--black);
+}
+
+.field input[type="text"] {
+  border: 1px solid var(--black);
+  border-radius: var(--radius-input);
+  background: var(--off-white);
+  padding: 12px 14px;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--black);
+  outline: none;
+}
+
+.field input[type="text"]::placeholder { color: var(--mid-gray); }
+
+.field .textarea-wrap {
+  border: 1px solid var(--black);
+  border-radius: var(--radius-input);
+  background: var(--off-white);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.field textarea {
+  border: none;
+  outline: none;
+  resize: none;
+  background: transparent;
+  width: 100%;
+  min-height: 72px;
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--black);
+}
+
+.field textarea::placeholder { color: var(--mid-gray); }
+
+.textarea-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.textarea-toolbar .icons { display: flex; gap: 10px; }
+.textarea-toolbar img { width: 20px; height: 20px; opacity: 0.6; }
+.textarea-toolbar button img { width: 18px; height: 20px; opacity: 0.75; }
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.checkbox-row input { position: absolute; opacity: 0; width: 0; height: 0; }
+
+.checkbox-box {
+  width: 20px;
+  height: 20px;
+  border: 1px solid var(--black);
+  border-radius: var(--radius-checkbox);
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+}
+
+.checkbox-box img { width: 14px; height: 14px; opacity: 0; transition: opacity .15s ease; }
+.checkbox-row input:checked + .checkbox-box { background: var(--black); }
+.checkbox-row input:checked + .checkbox-box img { opacity: 1; filter: invert(1); }
+
+.checkbox-row span {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  font-size: 14px;
+  color: var(--black);
+}
+
+.form-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.btn {
+  flex: 1 1 0;
+  height: 48px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--black);
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform .15s ease;
+}
+
+.btn:active { transform: scale(0.97); }
+.btn-back { background: var(--white); color: var(--black); }
+.btn-write { background: var(--black); color: var(--white); }

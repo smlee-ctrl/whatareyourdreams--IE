@@ -1,0 +1,15 @@
+.env
+.env.local
+.env.*.local
+node_modules/
+.DS_Store
+
+# reference material, not part of the site itself
+/*.png
+/*.zip
+/character.svg
+/mirror.svg
+/envelop.svg
+/open envelope.svg
+/openedmirror.svg
+/drive-download-*/

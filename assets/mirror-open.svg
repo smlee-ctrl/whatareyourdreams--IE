@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" viewBox="0 0 576 576">
+  <!-- Generator: Adobe Illustrator 30.8.1, SVG Export Plug-In . SVG Version: 2.1.4 Build 1)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #a67c52;
+      }
+
+      .st1 {
+        fill: url(#linear-gradient);
+      }
+
+      .st2 {
+        fill: #ccc;
+      }
+
+      .st3 {
+        fill: #c69c6d;
+      }
+    </style>
+    <linearGradient id="linear-gradient" x1="151.17" y1="274.97" x2="168.1" y2="274.97" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#b6b6b6"/>
+      <stop offset="0" stop-color="#b8b8b8"/>
+      <stop offset=".04" stop-color="#d0d0d0"/>
+      <stop offset=".09" stop-color="#e3e3e3"/>
+      <stop offset=".14" stop-color="#f0f0f0"/>
+      <stop offset=".21" stop-color="#f7f7f7"/>
+      <stop offset=".35" stop-color="#fafafa"/>
+      <stop offset="1" stop-color="#b6b6b6"/>
+    </linearGradient>
+  </defs>
+  <path class="st2" d="M156.46,274.97c0,81-6.28,152.05-25.53,163.09-2.23,1.28-8.15,1.07-10.26,1.07-19.77,0-35.79-73.49-35.79-164.15s16.02-164.15,35.79-164.15c2.47,0,8.86-.58,11.19,1.6,16.31,15.31,24.6,83.22,24.6,162.55Z"/>
+  <rect class="st1" x="151.17" y="252.28" width="16.93" height="45.39"/>
+  <circle class="st3" cx="327.02" cy="274.97" r="164.15"/>
+  <ellipse class="st0" cx="126.85" cy="274.97" rx="35.79" ry="164.15"/>
+</svg>
