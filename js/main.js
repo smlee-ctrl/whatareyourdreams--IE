@@ -117,6 +117,9 @@
     }
 
     // answers grow from one line, like the Figma field
+    // the third answer is engraved on the open mirror as it's typed
+    impact.addEventListener("input", () => door.setAnswer(impact.value.trim()));
+
     [major, impact].forEach((ta) => ta.addEventListener("input", () => {
       ta.style.height = "auto";
       ta.style.height = ta.scrollHeight + "px";

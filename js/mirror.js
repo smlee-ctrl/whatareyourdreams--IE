@@ -8,10 +8,34 @@
   // left of the hinge: a disc hinged at its left edge and swung 102.6deg.
   const SWING_DEG = -102.6;
 
+  // 66:132: the answer is carved into the glass. Each letter is lit gold with
+  // a soft shadow falling inside it from its top edges; CSS has no inner
+  // shadow for text, so it's an SVG filter the answer references by id.
+  function ensureEngraveFilter() {
+    if (document.getElementById("mirror-engrave")) return;
+    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("aria-hidden", "true");
+    svg.setAttribute("width", "0");
+    svg.setAttribute("height", "0");
+    svg.style.position = "absolute";
+    svg.innerHTML =
+      '<filter id="mirror-engrave" x="-5%" y="-20%" width="110%" height="140%" color-interpolation-filters="sRGB">' +
+        '<feComponentTransfer in="SourceAlpha" result="hole"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>' +
+        '<feOffset in="hole" dy="2.2" result="drop"/>' +
+        '<feGaussianBlur in="drop" stdDeviation="1.1" result="soft"/>' +
+        '<feFlood flood-color="#ae8f6e"/>' +
+        '<feComposite in2="soft" operator="in"/>' +
+        '<feComposite in2="SourceAlpha" operator="in" result="inner"/>' +
+        '<feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="inner"/></feMerge>' +
+      "</filter>";
+    document.body.appendChild(svg);
+  }
+
   // A mirror that opens like a door. It's laid out on its *open* surface
   // circle (box = {x, y, d}); pose() maps that circle onto any other box, so
   // the same element can sit small on the wall, enlarge, then swing open.
   function createDoor(parent, { knob = false } = {}) {
+    ensureEngraveFilter();
     const el = document.createElement("div");
     el.className = "door";
     el.hidden = true;
@@ -30,6 +54,7 @@
     parent.appendChild(el);
 
     let box = null;
+    let answerBase = 22;
 
     const door = {
       el,
@@ -68,11 +93,25 @@
         m.textContent = major || "";
         n.textContent = name ? "-" + name : "";
         n.hidden = !name;
-        a.textContent = answer || "";
         if (majorPx) m.style.fontSize = majorPx + "px";
         if (namePx) n.style.fontSize = namePx + "px";
-        if (answerPx) a.style.fontSize = answerPx + "px";
+        if (answerPx) answerBase = answerPx;
+        door.setAnswer(answer);
         wrap.style.paddingTop = name ? n.style.fontSize.replace("px", "") * 1.2 + "px" : "0";
+      },
+      // the answer alone — the create flow engraves it live as it's typed
+      setAnswer(answer) {
+        const a = el.querySelector(".door-answer");
+        a.textContent = answer || "";
+        // a long answer steps down in size until it fits inside the glass
+        // (measured while unseen when the door is still hidden)
+        const hidden = el.hidden;
+        if (hidden) { el.style.visibility = "hidden"; el.hidden = false; }
+        let px = answerBase;
+        a.style.fontSize = px + "px";
+        // (Bodoni's ascenders poke a few px past the line boxes even when it fits)
+        while (px > 12 && a.scrollHeight > a.clientHeight + 6) a.style.fontSize = --px + "px";
+        if (hidden) { el.hidden = true; el.style.visibility = ""; }
       },
       SWING_DEG
     };
