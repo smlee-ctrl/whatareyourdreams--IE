@@ -105,18 +105,17 @@ a { color: inherit; text-decoration: none; }
    angled flap matches the design instead of running backwards. */
 .home-nav svg { flex: none; width: 18.88px; height: 13px; transform: scaleX(-1); }
 
+/* node 52:12: Source Sans Bold 40px, 4px tracking, title case */
 .home-title {
   font-family: var(--font-title);
   font-weight: 700;
-  font-size: 32px;
+  font-size: 40px;
   line-height: 115%;
-  letter-spacing: 3.2px;
+  letter-spacing: 4px;
   color: var(--black);
   width: 342px;
   max-width: 100%;
-  text-transform: uppercase;
   margin: 0;
-  white-space: pre-line;
 }
 
 .home-body {
