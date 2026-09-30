@@ -28,25 +28,36 @@ IN THE FUTURE</h1>
       <p class="home-body">This exhibition allows you to thoughtfully think about why you are pursuing your career.</p>
     </div>
 
-    <!-- mirrors: node 56:289/56:349/56:257 -->
-    <img class="home-mirror home-mirror-1" src="assets/mirror-char-06.svg" alt="" aria-hidden="true" />
-    <img class="home-mirror home-mirror-2" src="assets/mirror-char-07.svg" alt="" aria-hidden="true" />
-    <img class="home-mirror home-mirror-3" src="assets/mirror-char-05.svg" alt="" aria-hidden="true" />
+    <!-- mirrors: node 56:289/56:349/56:257 — each wrapped so a border ring
+         can be drawn exactly on the visible circle's own edge, since the
+         source SVGs pad the drawn circle to ~57% of their square canvas -->
+    <div class="home-mirror-wrap home-mirror-1">
+      <img class="home-mirror" src="assets/mirror-char-06.svg" alt="" aria-hidden="true" />
+      <span class="mirror-eye mirror-eye-left"></span>
+      <span class="mirror-eye mirror-eye-right"></span>
+    </div>
+    <div class="home-mirror-wrap home-mirror-2">
+      <img class="home-mirror" src="assets/mirror-char-07.svg" alt="" aria-hidden="true" />
+      <span class="mirror-eye mirror-eye-left"></span>
+      <span class="mirror-eye mirror-eye-right"></span>
+    </div>
+    <div class="home-mirror-wrap home-mirror-3">
+      <img class="home-mirror" src="assets/mirror-char-05.svg" alt="" aria-hidden="true" />
+      <span class="mirror-eye mirror-eye-left"></span>
+      <span class="mirror-eye mirror-eye-right"></span>
+    </div>
   </div>
 
-  <!-- main character: body/hair/face is one static layer (identical in
-       both source files, so it never moves); the hand and eyes are cut out
-       from the two source files into their own layers and swap on
-       independent timers — only the hand animates for the wave, only the
-       eyes animate for the blink. All 5 pieces share the same 260x227
-       coordinate space (the character-1-derived pieces are shifted +11px
-       to line up with character-2's slightly wider canvas), so they stack
-       in perfect alignment with no positioning math needed. -->
+  <!-- main character: body/hair/face is one static layer (never moves);
+       the hand is a single detailed asset (from Figma node 63:70's hand
+       layer) on its own rotating group, pivoting near the wrist — since
+       it's one unchanging shape, the rotation is inherently smooth with no
+       pose-swap stutter. The eyes swap independently on their own timer
+       for the blink, fully decoupled from the hand. -->
   <div class="home-character-rig" role="img" aria-label="An illustrated character waving hello">
     <img class="home-char-layer home-char-base" src="assets/home-char-base.svg" alt="" />
     <div class="home-char-hand-group">
-      <img class="home-char-layer home-char-hand home-char-hand-a" src="assets/home-char-hand-a.svg" alt="" />
-      <img class="home-char-layer home-char-hand home-char-hand-b" src="assets/home-char-hand-b.svg" alt="" />
+      <img class="home-char-hand" src="assets/home-char-hand.svg" alt="" />
     </div>
     <img class="home-char-layer home-char-eyes home-char-eyes-open" src="assets/home-char-eyes-open.svg" alt="" />
     <img class="home-char-layer home-char-eyes home-char-eyes-closed" src="assets/home-char-eyes-closed.svg" alt="" />

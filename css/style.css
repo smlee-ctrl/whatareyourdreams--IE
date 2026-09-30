@@ -118,16 +118,87 @@ a { color: inherit; text-decoration: none; }
   margin: 0;
 }
 
-/* mirrors: nodes 56:289 (man), 56:349 (curly hair), 56:257 (straight hair) */
-.home-mirror {
+/* mirrors: nodes 56:289 (man), 56:349 (curly hair), 56:257 (straight hair).
+   The source SVGs draw their circle inset within a padded square canvas
+   (the visible circle is ~57% of the file's own width/height, matching
+   Figma's own asset), so the border ring is a separate pseudo-element
+   inset to land exactly on the drawn circle's edge, not on the padded
+   image box. */
+.home-mirror-wrap {
   position: absolute;
   display: block;
+}
+
+.home-mirror-wrap::after {
+  content: "";
+  position: absolute;
+  inset: 21.5%;
+  border-radius: 50%;
+  border: 1px solid var(--black);
+  pointer-events: none;
+}
+
+.home-mirror {
+  display: block;
+  width: 100%;
+  height: 100%;
   border-radius: 50%;
 }
 
 .home-mirror-1 { left: 71px; top: 393px; width: 402px; height: 402px; z-index: 1; }
 .home-mirror-2 { left: -77px; top: 223px; width: 360px; height: 360px; z-index: 2; }
 .home-mirror-3 { left: 156px; top: 182px; width: 273px; height: 273px; z-index: 3; }
+
+/* staggered blinking on the mirror portraits: there's no "eyes closed" art
+   for these (neither drawn nor in Figma), so a small closed-eye mark is
+   painted directly over each portrait's own eyes — positioned from the
+   actual eye-dot coordinates found in each source SVG. Each mirror runs
+   its own distinct duration/delay so the three never blink in sync. */
+.mirror-eye {
+  position: absolute;
+  width: 3.2%;
+  height: 0.55%;
+  min-height: 1px;
+  background: #231f20;
+  border-radius: 2px;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.home-mirror-1 .mirror-eye-left  { left: 48.52%; top: 46.23%; }
+.home-mirror-1 .mirror-eye-right { left: 53.64%; top: 46.23%; }
+.home-mirror-2 .mirror-eye-left  { left: 48.47%; top: 47.80%; }
+.home-mirror-2 .mirror-eye-right { left: 53.70%; top: 47.80%; }
+.home-mirror-3 .mirror-eye-left  { left: 47.09%; top: 45.46%; }
+.home-mirror-3 .mirror-eye-right { left: 52.91%; top: 45.46%; }
+
+/* all three share one 6s cycle with the blink window baked directly into
+   each mirror's own keyframe percentages, evenly spaced 2s apart — unlike
+   animation-delay (which only offsets when a cycle starts and can drift
+   into overlapping with another mirror's window depending on load timing),
+   fixed keyframe positions guarantee the three windows can never coincide. */
+.home-mirror-1 .mirror-eye { animation: mirror-blink-1 6s ease-in-out infinite; }
+.home-mirror-2 .mirror-eye { animation: mirror-blink-2 6s ease-in-out infinite; }
+.home-mirror-3 .mirror-eye { animation: mirror-blink-3 6s ease-in-out infinite; }
+
+@keyframes mirror-blink-1 {
+  0%, 9%       { opacity: 0; }
+  9.01%, 13%   { opacity: 1; }
+  13.01%, 100% { opacity: 0; }
+}
+
+@keyframes mirror-blink-2 {
+  0%, 42%      { opacity: 0; }
+  42.01%, 46%  { opacity: 1; }
+  46.01%, 100% { opacity: 0; }
+}
+
+@keyframes mirror-blink-3 {
+  0%, 75%      { opacity: 0; }
+  75.01%, 79%  { opacity: 1; }
+  79.01%, 100% { opacity: 0; }
+}
 
 /* main character — a 2-frame sprite swap between two complete, fully
    authored illustrations (frame A: hand down, eyes open; frame B: hand
@@ -159,51 +230,29 @@ a { color: inherit; text-decoration: none; }
 
 .home-char-base { z-index: 1; } /* torso/hair/face — never animates */
 
-/* hand: swaps between the two source poses on its own loop — this is the
-   only thing that moves for the wave */
-/* the smooth part: a single continuous, eased rotation applied to BOTH
-   poses at once via their shared parent, pivoting near the shoulder. Since
-   it drives both layers identically, the pose swap underneath never
-   interrupts or jumps the motion — the hand is always swinging smoothly,
-   and its shape just subtly changes at each swing's peak. */
+/* hand: a single detailed asset (Figma node 63:70's separate hand layer,
+   which Figma itself rotates 16.21deg off its own rest pose — used here as
+   the swing's outer reference angle) rotating on its own pivot group. It's
+   one unchanging shape the whole time, so the motion is inherently smooth
+   — nothing swaps mid-rotation, eliminating the stutter a pose-swap caused
+   earlier. Positioned/sized to the hand's own bounding box (not the full
+   character canvas) so the rotation pivots naturally at the wrist. */
 .home-char-hand-group {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: 132px;
+  top: 60px;
+  width: 100px;
   z-index: 2; /* in front of the base body, behind the eyes */
-  transform-origin: 65% 95%; /* near where the arm meets the shoulder */
+  transform-origin: 50% 92%; /* near the wrist, where the arm meets the sleeve */
   animation: home-hand-swing 1.8s ease-in-out infinite;
   animation-delay: 1s;
 }
 
+.home-char-hand { display: block; width: 100%; height: auto; }
+
 @keyframes home-hand-swing {
   0%, 100% { transform: rotate(0deg); }
-  25%      { transform: rotate(9deg); }
-  50%      { transform: rotate(0deg); }
-  75%      { transform: rotate(-9deg); }
-}
-
-/* Swapping the hand's actual shape repeatedly *while it's rotating* was
-   the stutter — even as a hard cut with zero overlap, a discrete shape
-   change layered on top of a continuous rotation reads as a hitch. So the
-   rotation now always drives a single unchanging pose (hand-a) — pure
-   CSS transform, nothing else moves, so it's inherently smooth with zero
-   stutter. hand-b only appears for the same brief window as the blink,
-   using the exact same 4.8s cycle/1.6s delay/89-94% keyframes as the eyes
-   below — the one moment the hand's exact shape is allowed to change is
-   masked by attention being on the closing eyes, matching how the two
-   source files were originally paired (hand-pose-B belongs with
-   eyes-closed). */
-.home-char-hand-a {
-  animation: home-eyes-open 4.8s linear infinite;
-  animation-delay: 1.6s;
-}
-
-.home-char-hand-b {
-  opacity: 0;
-  animation: home-eyes-closed 4.8s linear infinite;
-  animation-delay: 1.6s;
+  50%      { transform: rotate(16deg); }
 }
 
 /* eyes: swap on their own separate, slower loop — a blink, decoupled from

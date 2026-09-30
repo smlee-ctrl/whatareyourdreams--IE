@@ -1,17 +1,24 @@
 (function () {
-  const STORAGE_KEY = "ge_envelopes";
   const DRAFT_KEY = "ge_draft";
   const page = document.body.dataset.page;
 
-  function loadEnvelopes() {
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
-    catch { return []; }
-  }
+  // Supabase backs the actual dreams now — window.supabase is the SDK
+  // namespace (loaded via the CDN script tag), window.SUPABASE_URL/
+  // SUPABASE_ANON_KEY come from assets/supabase-config.js.
+  const db = (window.supabase && window.SUPABASE_URL)
+    ? window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY)
+    : null;
 
-  function saveEnvelope(entry) {
-    const list = loadEnvelopes();
-    list.unshift(entry);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+  // Every visitor gets a real, unspoofable anonymous identity the first
+  // time they touch the database — no login screen. Row Level Security
+  // policies check auth.uid() server-side, so "My Envelope" is actually
+  // enforced by Postgres, not just a client-side filter.
+  async function ensureAnonSession() {
+    const { data: { session } } = await db.auth.getSession();
+    if (session) return session;
+    const { data, error } = await db.auth.signInAnonymously();
+    if (error) throw error;
+    return data.session;
   }
 
   // seeded RNG so the bubble scatter layout is stable across reloads for
@@ -101,25 +108,52 @@
 
   // ---------------- Archive (Screens: 52:66 / 61:469 / 63:29 / 63:95) ----
   // Shared by both /archive/ (data-scope="all", everyone's shared mirrors)
-  // and /archive/mine/ (data-scope="mine", just this browser's own —
-  // there's no backend here, so "everyone's" only ever means every
-  // envelope this browser has saved with Share on).
+  // and /archive/mine/ (data-scope="mine", just this visitor's own,
+  // scoped to their anonymous auth identity — enforced by RLS, not just
+  // a client-side filter).
   if (page === "archive") {
-    const scope = document.body.dataset.scope;
-    const container = document.getElementById("archiveBubbles");
-    const scrim = document.getElementById("archiveScrim");
+    (async function initArchive() {
+      const scope = document.body.dataset.scope;
+      const container = document.getElementById("archiveBubbles");
+      const scrim = document.getElementById("archiveScrim");
 
-    const all = loadEnvelopes();
-    const entries = scope === "mine" ? all : all.filter((e) => e.share);
+      const loading = document.createElement("p");
+      loading.className = "archive-empty";
+      loading.textContent = "Loading dreams…";
+      container.appendChild(loading);
 
-    if (entries.length === 0) {
-      const empty = document.createElement("p");
-      empty.className = "archive-empty";
-      empty.textContent = scope === "mine"
-        ? "You haven't carved a mirror yet — go write one."
-        : "No mirrors yet — be the first to write one.";
-      container.appendChild(empty);
-    } else {
+      let entries = [];
+      try {
+        await ensureAnonSession();
+        const query = scope === "mine"
+          ? db.from("dreams").select("*").eq("owner_id", (await db.auth.getUser()).data.user.id)
+          : db.from("dreams").select("*").eq("share", true);
+        const { data, error } = await query.order("created_at", { ascending: false });
+        if (error) throw error;
+        entries = data.map((row) => ({
+          id: row.id,
+          name: row.name,
+          pursuit: row.pursuit,
+          message: row.message,
+          share: row.share,
+          showName: row.show_name,
+          ts: new Date(row.created_at).getTime()
+        }));
+      } catch (err) {
+        loading.textContent = "Couldn't load dreams right now — please refresh to try again.";
+        return;
+      }
+
+      loading.remove();
+
+      if (entries.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "archive-empty";
+        empty.textContent = scope === "mine"
+          ? "You haven't carved a mirror yet — go write one."
+          : "No mirrors yet — be the first to write one.";
+        container.appendChild(empty);
+      } else {
       const width = container.clientWidth || 390;
       const placed = layoutBubbles(entries, width);
       let activeBubble = null; // { el, layout }
@@ -233,11 +267,13 @@
 
       container.style.height = (Math.max.apply(null, placed.map((p) => p.y + p.size)) + 24) + "px";
       scrim.addEventListener("click", closeActive);
-    }
+      }
+    })();
   }
 
   // ---------------- Create, step 1: "what did you pursue" (52:126) -------
   if (page === "create") {
+    ensureAnonSession().catch(() => {}); // warm the anon session early
     const form = document.getElementById("envelopeFormStep1");
     form.addEventListener("submit", (e) => {
       e.preventDefault();
@@ -279,22 +315,34 @@
       showNameField.checked = draft.showName !== false;
 
       const form = document.getElementById("envelopeFormStep2");
-      form.addEventListener("submit", (e) => {
+      const writeBtn = document.getElementById("writeBtn");
+      form.addEventListener("submit", async (e) => {
         e.preventDefault();
         const message = messageField.value.trim();
         if (!message) { messageField.focus(); return; }
 
-        saveEnvelope({
-          id: Date.now() + "-" + Math.random().toString(36).slice(2, 8),
-          name: nameField.value.trim(),
-          pursuit: draft.pursuit,
-          message,
-          share: shareField.checked,
-          showName: showNameField.checked,
-          ts: Date.now()
-        });
-        sessionStorage.removeItem(DRAFT_KEY);
-        window.location.href = "../../archive/mine/";
+        writeBtn.disabled = true;
+        writeBtn.textContent = "Writing…";
+        try {
+          await ensureAnonSession();
+          const { error } = await db.from("dreams").insert({
+            name: nameField.value.trim(),
+            pursuit: draft.pursuit,
+            message,
+            share: shareField.checked,
+            show_name: showNameField.checked
+          });
+          if (error) throw error;
+
+          sessionStorage.removeItem(DRAFT_KEY);
+          window.location.href = "../../archive/mine/";
+        } catch (err) {
+          writeBtn.disabled = false;
+          writeBtn.textContent = "Write";
+          messageField.setCustomValidity("Couldn't save your mirror — please try again.");
+          messageField.reportValidity();
+          messageField.setCustomValidity("");
+        }
       });
     }
   }
