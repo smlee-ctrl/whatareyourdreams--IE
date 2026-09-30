@@ -10,7 +10,7 @@
 
   // Every visitor gets a real, unspoofable anonymous identity the first
   // time they touch the database — no login screen. Row Level Security
-  // policies check auth.uid() server-side, so "My Envelope" is actually
+  // policies check auth.uid() server-side, so "My Mirror" is actually
   // enforced by Postgres, not just a client-side filter.
   async function ensureAnonSession() {
     const { data: { session } } = await db.auth.getSession();
@@ -156,7 +156,7 @@
           show_name: showName.checked
         });
         if (error) throw error;
-        // a shared mirror joins the public wall; a private one only lives in My Envelope
+        // a shared mirror joins the public wall; a private one only lives in My Mirror
         window.location.href = share.checked ? "../archive/" : "../archive/mine/";
       } catch (err) {
         setBusy(false);
@@ -183,7 +183,7 @@
     });
   }
 
-  // ---------------- Archive / My Envelope: the mirror wall ----------------
+  // ---------------- Archive / My Mirror: the mirror wall ----------------
   // (52:66 / 61:469 / 63:29 / 63:95). /archive/ shows everyone's shared
   // mirrors; /archive/mine/ only this visitor's own — scoped by their
   // anonymous auth identity and enforced by RLS.

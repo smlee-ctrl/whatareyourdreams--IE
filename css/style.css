@@ -390,7 +390,7 @@ a { color: inherit; text-decoration: none; }
   color: var(--mid-gray);
 }
 
-/* ---------- Archive / My Envelope: the mirror wall (52:66, 61:469, 63:29, 63:95) ---------- */
+/* ---------- Archive / My Mirror: the mirror wall (52:66, 61:469, 63:29, 63:95) ---------- */
 /* Mirrors drop in with Matter.js and can be hung on the five hooks taken
    from the Figma archive layout. JS positions each mirror; CSS only draws. */
 
@@ -519,15 +519,15 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
 }
 
-/* 63:29: Bodoni Bold 22px in the mirror's gold at 20% — the answer reads as
-   carved into the glass */
+/* 66:132: Bodoni Bold 22px in the mirror's gold, full strength, on the
+   darker gold glass — the answer reads as carved into it */
 .door-answer {
   margin: 0;
   width: 80%;
   font-family: var(--font-serif);
   font-weight: 700;
   font-size: 22px;
-  color: rgba(232, 191, 147, 0.2);
+  color: var(--mirror-gold);
   text-align: center;
   word-break: break-word;
 }
