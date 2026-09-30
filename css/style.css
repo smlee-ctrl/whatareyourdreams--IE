@@ -88,11 +88,15 @@ a { color: inherit; text-decoration: none; }
 .home-nav span {
   font-family: var(--font-serif);
   font-weight: 400;
-  font-size: 14px;
-  color: var(--black);
+  font-size: 15px;
+  letter-spacing: 0.75px;
+  color: var(--dark-gray);
 }
 
-.home-nav svg { width: 16px; height: 16px; }
+/* Figma applies a vertical flip + 180deg rotation to this icon (net effect:
+   a horizontal mirror of the raw asset) — replicated here so the envelope's
+   angled flap matches the design instead of running backwards. */
+.home-nav svg { width: 19px; height: 13px; transform: scaleX(-1); }
 
 .home-title {
   font-family: var(--font-title);
@@ -132,11 +136,18 @@ a { color: inherit; text-decoration: none; }
 .home-mirror-wrap::after {
   content: "";
   position: absolute;
-  inset: 21.5%;
   border-radius: 50%;
   border: 1px solid var(--black);
   pointer-events: none;
 }
+
+/* the drawn circle isn't centered identically in every file — mirror-char-06
+   and -07 share one (slightly off-center) circle position, distinct from
+   mirror-char-05's — so each needs its own measured inset (via direct pixel
+   scan of the rendered art) rather than one shared percentage. */
+.home-mirror-1::after,
+.home-mirror-2::after { inset: 21.35% 20.66% 21.70% 22.40%; }
+.home-mirror-3::after { inset: 21.35% 21.53% 21.53% 21.35%; }
 
 .home-mirror {
   display: block;
@@ -200,15 +211,15 @@ a { color: inherit; text-decoration: none; }
   79.01%, 100% { opacity: 0; }
 }
 
-/* main character — a 2-frame sprite swap between two complete, fully
-   authored illustrations (frame A: hand down, eyes open; frame B: hand
-   raised, eyes closed), instead of positioning separate torso/hand/hair/
-   face/eyes layers by hand. Box uses frame B's own 260x227 canvas; frame A
-   (249x224) stretches ~4% to match, which is not noticeable. */
+/* main character (node 56:41). On the home frame Figma places this node as a
+   horizontally flipped frame at x=249, i.e. rendered across x -11..249 — so
+   the layers (cut from the node's own unflipped art) sit inside a mirrored
+   wrapper. The wrapper is separate from the rig because the rig's fade-in
+   animation owns `transform`. */
 .home-character-rig {
   position: absolute;
-  left: -12px;
-  top: 617px;
+  left: -11px;
+  top: 620px;
   width: 260px;
   height: 227px;
   z-index: 10;
@@ -220,39 +231,38 @@ a { color: inherit; text-decoration: none; }
   to { opacity: 1; transform: translateY(0); }
 }
 
-.home-char-layer {
+.home-char-flip {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
+  transform: scaleX(-1);
+}
+
+/* the art is 261.007x226.859; Figma offsets it ~1.2px left inside the frame */
+.home-char-layer {
+  position: absolute;
+  left: -1.2px;
+  top: 0;
+  width: 261px;
+  height: 227px;
   display: block;
 }
 
-.home-char-base { z-index: 1; } /* torso/hair/face — never animates */
+.home-char-base { z-index: 1; } /* torso/sleeve/hair/face — never animates */
 
-/* hand: a single detailed asset (Figma node 63:70's separate hand layer,
-   which Figma itself rotates 16.21deg off its own rest pose — used here as
-   the swing's outer reference angle) rotating on its own pivot group. It's
-   one unchanging shape the whole time, so the motion is inherently smooth
-   — nothing swaps mid-rotation, eliminating the stutter a pose-swap caused
-   earlier. Positioned/sized to the hand's own bounding box (not the full
-   character canvas) so the rotation pivots naturally at the wrist. */
-.home-char-hand-group {
-  position: absolute;
-  left: 132px;
-  top: 60px;
-  width: 100px;
-  z-index: 2; /* in front of the base body, behind the eyes */
-  transform-origin: 50% 92%; /* near the wrist, where the arm meets the sleeve */
+/* hand: only the hand itself rotates, pivoting at the wrist where it overlaps
+   the sleeve (≈52,145 in the art's own coordinates), so the joint stays
+   covered. Rest (0deg) is exactly Figma's pose; negative angles swing it away
+   from the face. One unchanging shape under a pure rotation — no stutter. */
+.home-char-hand {
+  z-index: 2;
+  transform-origin: 52px 145px;
   animation: home-hand-swing 1.8s ease-in-out infinite;
   animation-delay: 1s;
 }
 
-.home-char-hand { display: block; width: 100%; height: auto; }
-
 @keyframes home-hand-swing {
   0%, 100% { transform: rotate(0deg); }
-  50%      { transform: rotate(16deg); }
+  50%      { transform: rotate(-16deg); }
 }
 
 /* eyes: swap on their own separate, slower loop — a blink, decoupled from
