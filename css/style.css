@@ -518,8 +518,8 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
 }
 
-/* 66:132: Bodoni Bold 22px carved into the glass — gold letters with a crisp
-   shadow band inside their top edges (the #mirror-engrave filter,
+/* 66:132: Bodoni Bold 22px carved into the glass — gold letters with a tight
+   shadow line inside their top edges (the #mirror-engrave filter,
    js/mirror.js), lines 26px apart */
 .door-answer {
   margin: 0;

@@ -9,7 +9,7 @@
   const SWING_DEG = -102.6;
 
   // 66:132: the answer is carved into the glass. Each letter is gold with a
-  // crisp shadow band falling inside it from its top edges; CSS has no inner
+  // tight shadow line falling inside it from its top edges; CSS has no inner
   // shadow for text, so it's an SVG filter the answer references by id.
   function ensureEngraveFilter() {
     if (document.getElementById("mirror-engrave")) return;
@@ -21,9 +21,9 @@
     svg.innerHTML =
       '<filter id="mirror-engrave" x="-5%" y="-20%" width="110%" height="140%" color-interpolation-filters="sRGB">' +
         '<feComponentTransfer in="SourceAlpha" result="hole"><feFuncA type="table" tableValues="1 0"/></feComponentTransfer>' +
-        '<feOffset in="hole" dy="4" result="drop"/>' +
-        '<feGaussianBlur in="drop" stdDeviation="0.4" result="soft"/>' +
-        '<feFlood flood-color="#ae8f6e"/>' +
+        '<feOffset in="hole" dx="1.1" dy="1.6" result="drop"/>' +
+        '<feGaussianBlur in="drop" stdDeviation="0.6" result="soft"/>' +
+        '<feFlood flood-color="#a78766"/>' +
         '<feComposite in2="soft" operator="in"/>' +
         '<feComposite in2="SourceAlpha" operator="in" result="inner"/>' +
         '<feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="inner"/></feMerge>' +
