@@ -23,7 +23,7 @@
         '<div class="door-back"></div>' +
         '<div class="door-front">' +
           '<img class="mirror-art" src="/assets/mirror-closed.svg" alt="" />' +
-          '<p class="door-major"></p>' +
+          '<div class="door-major"><p class="door-major-text"></p><p class="door-name"></p></div>' +
           (knob ? '<button type="button" class="door-knob" aria-label="Open the mirror"></button>' : "") +
         "</div>" +
       "</div>";
@@ -58,13 +58,21 @@
         el.classList.remove("is-open");
         return wait(REDUCED ? 0 : ms);
       },
-      setText(major, answer, { majorPx, answerPx } = {}) {
-        const m = el.querySelector(".door-major");
+      // 69:432: the major, with "-Name" beneath it when the writer chose to
+      // show their name; the major itself stays centred on the glass
+      setText(major, answer, { name = "", majorPx, namePx, answerPx } = {}) {
+        const wrap = el.querySelector(".door-major");
+        const m = el.querySelector(".door-major-text");
+        const n = el.querySelector(".door-name");
         const a = el.querySelector(".door-answer");
         m.textContent = major || "";
+        n.textContent = name ? "-" + name : "";
+        n.hidden = !name;
         a.textContent = answer || "";
         if (majorPx) m.style.fontSize = majorPx + "px";
+        if (namePx) n.style.fontSize = namePx + "px";
         if (answerPx) a.style.fontSize = answerPx + "px";
+        wrap.style.paddingTop = name ? n.style.fontSize.replace("px", "") * 1.2 + "px" : "0";
       },
       SWING_DEG
     };

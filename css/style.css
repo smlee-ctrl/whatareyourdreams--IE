@@ -562,14 +562,12 @@ a { color: inherit; text-decoration: none; }
 .door-major {
   position: absolute;
   inset: 0;
-  margin: 0;
   padding: 0 9.8%;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 22px;
   color: var(--black);
   text-align: center;
   word-break: break-word;
@@ -577,6 +575,12 @@ a { color: inherit; text-decoration: none; }
   transition: opacity .25s ease .15s;
   pointer-events: none;
 }
+
+.door-major-text { margin: 0; font-weight: 700; font-size: 22px; }
+
+/* 69:432: "-Name" in Bodoni Book 14px under the major */
+.door-name { margin: 0; font-weight: 400; font-size: 14px; line-height: 1.2; }
+.door-name[hidden] { display: none; }
 
 .door.show-major .door-major { opacity: 1; }
 

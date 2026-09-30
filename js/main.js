@@ -202,12 +202,17 @@
       let entries = [];
       try {
         await ensureAnonSession();
-        const query = scope === "mine"
-          ? db.from("dreams").select("*").eq("owner_id", (await db.auth.getUser()).data.user.id)
-          : db.from("dreams").select("*").eq("share", true);
-        const { data, error } = await query.order("created_at", { ascending: false });
+        const uid = scope === "mine" ? (await db.auth.getUser()).data.user.id : null;
+        const read = (source, columns) => {
+          const q = db.from(source).select(columns);
+          return (uid ? q.eq("owner_id", uid) : q.eq("share", true)).order("created_at", { ascending: false });
+        };
+        // dreams_public only returns a name its writer chose to show; until
+        // that view exists, read the table without names rather than fail
+        let { data, error } = await read("dreams_public", "id,pursuit,message,name");
+        if (error) ({ data, error } = await read("dreams", "id,pursuit,message"));
         if (error) throw error;
-        entries = data.map((row) => ({ id: row.id, pursuit: row.pursuit, message: row.message }));
+        entries = data.map((row) => ({ id: row.id, pursuit: row.pursuit, message: row.message, name: row.name || "" }));
       } catch (err) {
         status.textContent = "Couldn't load dreams right now — please refresh to try again.";
         return;
@@ -251,7 +256,9 @@
         current = m;
         m.viewing = true;
         door.setText(m.entry.pursuit, m.entry.message, {
+          name: m.entry.name,
           majorPx: 22 * VIEW_SURFACE.d / VIEW_POSE.w,
+          namePx: 14 * VIEW_SURFACE.d / VIEW_POSE.w,
           answerPx: 22
         });
         await door.close(0);
