@@ -167,6 +167,27 @@ a { color: inherit; text-decoration: none; }
 .home-mirror-2 { left: -77px; top: 223px; width: 360px; height: 360px; z-index: 2; }
 .home-mirror-3 { left: 156px; top: 182px; width: 273px; height: 273px; z-index: 3; }
 
+/* on arrival the mirrors fall in from above and land exactly on their Figma
+   spots: they accelerate down, hit, and settle with two shrinking bounces */
+@keyframes mirror-drop {
+  0%   { transform: translateY(-110vh); animation-timing-function: cubic-bezier(.5, 0, 1, .5); }
+  60%  { transform: translateY(0);      animation-timing-function: cubic-bezier(0, .5, .5, 1); }
+  74%  { transform: translateY(-22px);  animation-timing-function: cubic-bezier(.5, 0, 1, .5); }
+  86%  { transform: translateY(0);      animation-timing-function: cubic-bezier(0, .5, .5, 1); }
+  93%  { transform: translateY(-6px);   animation-timing-function: cubic-bezier(.5, 0, 1, .5); }
+  100% { transform: translateY(0); }
+}
+
+.home-mirror-wrap { animation: mirror-drop 1.1s both; }
+.home-mirror-3 { animation-delay: .1s; }
+.home-mirror-2 { animation-delay: .3s; }
+.home-mirror-1 { animation-delay: .5s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .home-mirror-wrap,
+  .flow-door-layer { animation: none; }
+}
+
 /* mirror blinks: each portrait's eye dots were pulled out of its SVG into an
    open-eye layer, alongside a closed-eye layer drawn at Figma's size (nodes
    74:566/74:567 — 2x1 and 3x1px at the 402px mirror). Both layers share the
@@ -607,6 +628,7 @@ a { color: inherit; text-decoration: none; }
   position: relative;
   flex: 0 0 auto;
   height: 451px;
+  overflow: hidden; /* the arriving mirror falls in from under the nav bar */
   transition: height .5s ease;
 }
 
@@ -620,6 +642,7 @@ a { color: inherit; text-decoration: none; }
   width: 390px;
   height: 100%;
   margin-left: -195px;
+  animation: mirror-drop 1.1s .15s both;
 }
 
 .create-form {
