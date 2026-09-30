@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Public Envelope Archive</title>
+<title>Archive</title>
 <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body data-page="archive" data-scope="all">
@@ -14,14 +14,14 @@
       <p>This is a safe, moderated space. No profanity, hate speech, or personally identifying information &middot; Content may be reviewed for safety.</p>
     </div>
     <div class="nav-bar">
-      <a class="nav-archive active" href="./">ARCHIVE</a>
+      <a class="nav-archive active" href="./" aria-current="page">ARCHIVE</a>
       <a class="nav-label" href="mine/">My Envelope</a>
     </div>
   </div>
 
-  <div class="archive-content">
+  <div class="wall" id="wall">
     <p class="archive-hint">Hover or tap on an envelope to read a dream</p>
-    <div class="archive-bubbles" id="archiveBubbles"></div>
+    <div class="wall-viewer" id="wallViewer"></div>
   </div>
 
   <footer class="footer">
@@ -29,10 +29,12 @@
   </footer>
 </main>
 
-<div class="archive-scrim" id="archiveScrim"></div>
+<div class="viewer-scrim" id="viewerScrim"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../assets/supabase-config.js"></script>
+<script src="../js/mirror.js"></script>
 <script src="../js/main.js"></script>
 </body>
 </html>

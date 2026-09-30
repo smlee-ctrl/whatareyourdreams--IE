@@ -1,5 +1,4 @@
 (function () {
-  const DRAFT_KEY = "ge_draft";
   const page = document.body.dataset.page;
 
   // Supabase backs the actual dreams now — window.supabase is the SDK
@@ -19,50 +18,6 @@
     const { data, error } = await db.auth.signInAnonymously();
     if (error) throw error;
     return data.session;
-  }
-
-  // seeded RNG so the bubble scatter layout is stable across reloads for
-  // the same set of envelopes, instead of jumping around every visit
-  function seedFromString(str) {
-    let h = 0;
-    for (let i = 0; i < str.length; i++) h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
-    return h;
-  }
-
-  function mulberry32(seed) {
-    let s = seed | 0;
-    return function () {
-      s = (s + 0x6d2b79f5) | 0;
-      let t = Math.imul(s ^ (s >>> 15), 1 | s);
-      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    };
-  }
-
-  // loosely overlapping bubble scatter (nodes 52:66 / 61:469 / 63:29):
-  // envelopes alternate down a left/right cascade with random size/jitter,
-  // each new one climbing up into the previous one's space so they overlap
-  // the way the mock does, instead of sitting in a regular grid.
-  function layoutBubbles(entries, containerWidth) {
-    const MIN_SIZE = 130, MAX_SIZE = 225;
-    let cursorLeft = 12, cursorRight = 90;
-    return entries.map((entry, i) => {
-      const rand = mulberry32(seedFromString(String(entry.id || entry.ts) + i));
-      const size = MIN_SIZE + rand() * (MAX_SIZE - MIN_SIZE);
-      const onLeft = i % 2 === 0;
-      const jitter = (rand() - 0.5) * 28;
-      let x, y;
-      if (onLeft) {
-        y = cursorLeft;
-        x = -size * 0.2 + jitter;
-        cursorLeft = y + size * 0.58;
-      } else {
-        y = cursorRight;
-        x = containerWidth - size * 0.8 + jitter;
-        cursorRight = y + size * 0.58;
-      }
-      return { entry, x, y, size };
-    });
   }
 
   // ---------------- Home (Screen 1) ----------------
@@ -106,21 +61,143 @@
     }, { passive: true });
   }
 
-  // ---------------- Archive (Screens: 52:66 / 61:469 / 63:29 / 63:95) ----
-  // Shared by both /archive/ (data-scope="all", everyone's shared mirrors)
-  // and /archive/mine/ (data-scope="mine", just this visitor's own,
-  // scoped to their anonymous auth identity — enforced by RLS, not just
-  // a client-side filter).
+  const nextFrame = () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+
+  // ---------------- Create: three questions (52:126 → 69:337 → 69:217) ----
+  // All positions below are in the mirror stage's own coordinates (Figma's
+  // 390px frame, measured from the top of the stage). The door is laid out
+  // on its open surface circle; each closed step is a pose of that circle.
+  if (page === "create") {
+    ensureAnonSession().catch(() => {}); // warm the anon session early
+
+    const main = document.querySelector(".create-flow");
+    const form = document.getElementById("flowForm");
+    const back = document.getElementById("flowBack");
+    const next = document.getElementById("flowNext");
+    const name = document.getElementById("fieldName");
+    const major = document.getElementById("fieldMajor");
+    const impact = document.getElementById("fieldImpact");
+    const share = document.getElementById("fieldShare");
+    const showName = document.getElementById("fieldShowName");
+
+    const SURFACE = { x: 110.28, y: 81.53, d: 222.29 };
+    const POSES = {
+      1: { x: 76.45, y: 108.07, w: 237.1, h: 218.86 },
+      2: { x: 76.45, y: 90.57, w: 237.1, h: 218.86 }
+    };
+
+    const door = window.MirrorDoor.create(document.getElementById("flowDoorLayer"));
+    door.place(SURFACE);
+    door.pose(POSES[1]);
+    door.el.hidden = false;
+
+    let step = 1;
+    let busy = false;
+
+    function showStep(n, focus = true) {
+      step = n;
+      main.dataset.step = String(n);
+      form.querySelectorAll(".flow-step").forEach((s) => { s.hidden = Number(s.dataset.step) !== n; });
+      next.textContent = n === 3 ? "Finish" : "Write";
+      if (focus) ({ 1: name, 2: major, 3: impact })[n].focus({ preventScroll: true });
+    }
+
+    function setBusy(on) {
+      busy = on;
+      next.disabled = on;
+      back.disabled = on;
+    }
+
+    function require(field, message) {
+      if (field.value.trim()) return true;
+      field.setCustomValidity(message);
+      field.reportValidity();
+      field.addEventListener("input", () => field.setCustomValidity(""), { once: true });
+      return false;
+    }
+
+    // answers grow from one line, like the Figma field
+    [major, impact].forEach((ta) => ta.addEventListener("input", () => {
+      ta.style.height = "auto";
+      ta.style.height = ta.scrollHeight + "px";
+      ta.style.overflowY = ta.scrollHeight > 120 ? "auto" : "hidden";
+    }));
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (busy) return;
+
+      if (step === 1) {
+        showStep(2);
+        await door.pose(POSES[2], 500);
+        return;
+      }
+
+      if (step === 2) {
+        if (!require(major, "Please write your major.")) return;
+        setBusy(true);
+        await door.pose(null, 350);   // settle onto the hinge position
+        await door.open(1100);        // then swing open like a door
+        showStep(3);
+        setBusy(false);
+        return;
+      }
+
+      if (!require(impact, "Please write the impact you hope to make.")) return;
+      setBusy(true);
+      next.textContent = "Finishing…";
+      try {
+        await ensureAnonSession();
+        const { error } = await db.from("dreams").insert({
+          name: name.value.trim(),
+          pursuit: major.value.trim(),
+          message: impact.value.trim(),
+          share: share.checked,
+          show_name: showName.checked
+        });
+        if (error) throw error;
+        // a shared mirror joins the public wall; a private one only lives in My Envelope
+        window.location.href = share.checked ? "../archive/" : "../archive/mine/";
+      } catch (err) {
+        setBusy(false);
+        next.textContent = "Finish";
+        impact.setCustomValidity("Couldn't save your mirror — please try again.");
+        impact.reportValidity();
+        impact.setCustomValidity("");
+      }
+    });
+
+    back.addEventListener("click", async () => {
+      if (busy) return;
+      if (step === 1) { window.location.href = "../"; return; }
+      if (step === 2) {
+        showStep(1);
+        await door.pose(POSES[1], 500);
+        return;
+      }
+      setBusy(true);
+      await door.close(700);
+      await door.pose(POSES[2], 350);
+      showStep(2);
+      setBusy(false);
+    });
+  }
+
+  // ---------------- Archive / My Envelope: the mirror wall ----------------
+  // (52:66 / 61:469 / 63:29 / 63:95). /archive/ shows everyone's shared
+  // mirrors; /archive/mine/ only this visitor's own — scoped by their
+  // anonymous auth identity and enforced by RLS.
   if (page === "archive") {
     (async function initArchive() {
       const scope = document.body.dataset.scope;
-      const container = document.getElementById("archiveBubbles");
-      const scrim = document.getElementById("archiveScrim");
+      const wallEl = document.getElementById("wall");
+      const viewerEl = document.getElementById("wallViewer");
+      const scrim = document.getElementById("viewerScrim");
 
-      const loading = document.createElement("p");
-      loading.className = "archive-empty";
-      loading.textContent = "Loading dreams…";
-      container.appendChild(loading);
+      const status = document.createElement("p");
+      status.className = "archive-empty";
+      status.textContent = "Loading dreams…";
+      wallEl.appendChild(status);
 
       let entries = [];
       try {
@@ -130,220 +207,96 @@
           : db.from("dreams").select("*").eq("share", true);
         const { data, error } = await query.order("created_at", { ascending: false });
         if (error) throw error;
-        entries = data.map((row) => ({
-          id: row.id,
-          name: row.name,
-          pursuit: row.pursuit,
-          message: row.message,
-          share: row.share,
-          showName: row.show_name,
-          ts: new Date(row.created_at).getTime()
-        }));
+        entries = data.map((row) => ({ id: row.id, pursuit: row.pursuit, message: row.message }));
       } catch (err) {
-        loading.textContent = "Couldn't load dreams right now — please refresh to try again.";
+        status.textContent = "Couldn't load dreams right now — please refresh to try again.";
         return;
       }
-
-      loading.remove();
 
       if (entries.length === 0) {
-        const empty = document.createElement("p");
-        empty.className = "archive-empty";
-        empty.textContent = scope === "mine"
-          ? "You haven't carved a mirror yet — go write one."
+        status.textContent = scope === "mine"
+          ? "You haven't written a mirror yet — go write one."
           : "No mirrors yet — be the first to write one.";
-        container.appendChild(empty);
-      } else {
-      const width = container.clientWidth || 390;
-      const placed = layoutBubbles(entries, width);
-      let activeBubble = null; // { el, layout }
-
-      function resizeTo(el, layout, size) {
-        const centerX = layout.x + layout.size / 2;
-        const centerY = layout.y + layout.size / 2;
-        const left = Math.max(8, Math.min(width - size - 8, centerX - size / 2));
-        const top = Math.max(8, centerY - size / 2);
-        el.style.width = size + "px";
-        el.style.height = size + "px";
-        el.style.left = left + "px";
-        el.style.top = top + "px";
-      }
-
-      function closeActive() {
-        if (!activeBubble) return;
-        const { el, layout } = activeBubble;
-        resizeTo(el, layout, layout.size);
-        el.style.zIndex = "";
-        scrim.classList.remove("visible");
-        el.addEventListener("transitionend", function cleanup(e) {
-          if (e.propertyName === "width") {
-            el.classList.remove("peeking", "opening");
-            el.removeEventListener("transitionend", cleanup);
-          }
-        });
-        activeBubble = null;
-      }
-
-      function setPeek(el, layout) {
-        if (activeBubble && activeBubble.el !== el) closeActive();
-        el.classList.add("peeking");
-        el.classList.remove("opening");
-        el.style.zIndex = "30";
-        resizeTo(el, layout, Math.min(300, width - 24));
-        scrim.classList.add("visible");
-        activeBubble = { el, layout };
-      }
-
-      function setOpen(el, layout) {
-        el.classList.remove("peeking");
-        el.classList.add("opening");
-        el.style.zIndex = "30";
-        resizeTo(el, layout, Math.min(340, width - 16));
-        scrim.classList.add("visible");
-        activeBubble = { el, layout };
-        el.scrollIntoView({ behavior: "smooth", block: "center" });
-      }
-
-      placed.forEach((layout, i) => {
-        const { entry, x, y, size } = layout;
-        const bubble = document.createElement("button");
-        bubble.type = "button";
-        bubble.className = "envelope-bubble";
-        bubble.style.left = x + "px";
-        bubble.style.top = y + "px";
-        bubble.style.width = size + "px";
-        bubble.style.height = size + "px";
-        bubble.setAttribute("aria-label", "Read this dream");
-
-        const imgClosed = document.createElement("img");
-        imgClosed.className = "bubble-img-closed";
-        imgClosed.src = "/assets/mirror-closed.svg";
-        imgClosed.alt = "";
-
-        const imgOpen = document.createElement("img");
-        imgOpen.className = "bubble-img-open";
-        imgOpen.src = "/assets/mirror-open.svg";
-        imgOpen.alt = "";
-
-        const label = document.createElement("span");
-        label.className = "bubble-label";
-        label.textContent = entry.pursuit || "";
-
-        const message = document.createElement("span");
-        message.className = "bubble-message";
-        message.textContent = entry.message || "";
-
-        bubble.append(imgClosed, imgOpen, label, message);
-        container.appendChild(bubble);
-
-        // entrance: drop in from above, staggered per bubble
-        bubble.style.transitionDelay = (i * 80) + "ms";
-        requestAnimationFrame(() => {
-          requestAnimationFrame(() => bubble.classList.add("dropped"));
-        });
-        bubble.addEventListener("transitionend", function onDrop(e) {
-          if (e.propertyName === "transform") {
-            bubble.style.transitionDelay = "";
-            bubble.removeEventListener("transitionend", onDrop);
-          }
-        });
-
-        bubble.addEventListener("mouseenter", () => {
-          if (bubble.classList.contains("opening")) return;
-          setPeek(bubble, layout);
-        });
-        bubble.addEventListener("mouseleave", () => {
-          if (activeBubble && activeBubble.el === bubble && bubble.classList.contains("peeking")) {
-            closeActive();
-          }
-        });
-        bubble.addEventListener("click", (e) => {
-          e.stopPropagation();
-          if (bubble.classList.contains("opening")) closeActive();
-          else if (bubble.classList.contains("peeking")) setOpen(bubble, layout);
-          else setPeek(bubble, layout);
-        });
-      });
-
-      container.style.height = (Math.max.apply(null, placed.map((p) => p.y + p.size)) + 24) + "px";
-      scrim.addEventListener("click", closeActive);
-      }
-    })();
-  }
-
-  // ---------------- Create, step 1: "what did you pursue" (52:126) -------
-  if (page === "create") {
-    ensureAnonSession().catch(() => {}); // warm the anon session early
-    const form = document.getElementById("envelopeFormStep1");
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const name = document.getElementById("fieldName").value.trim();
-      const pursuit = document.getElementById("fieldPursuit").value.trim();
-      const share = document.getElementById("fieldShare").checked;
-      const showName = document.getElementById("fieldShowName").checked;
-
-      if (!pursuit) {
-        document.getElementById("fieldPursuit").focus();
         return;
       }
+      status.remove();
 
-      sessionStorage.setItem(DRAFT_KEY, JSON.stringify({ name, pursuit, share, showName }));
-      window.location.href = "step-2/";
-    });
-  }
+      // viewer geometry, in Figma's 390px content-area coordinates:
+      // enlarged mirror (61:469) and its open surface circle (63:29)
+      const VIEW_POSE = { x: 66.7, y: 184.06, w: 277.57, h: 275.86 };
+      const VIEW_SURFACE = { x: 85.58, y: 211.08, d: 249.07 };
 
-  // ---------------- Create, step 2: "why did you pursue" (52:179) --------
-  // The mirror just opens on its own (see the mirror-open-in/closed-out
-  // keyframes in css) as the transition into this question — no gesture
-  // required, Write is available right away.
-  if (page === "create-step2") {
-    const draft = (() => {
-      try { return JSON.parse(sessionStorage.getItem(DRAFT_KEY)) || {}; }
-      catch { return {}; }
-    })();
+      const door = window.MirrorDoor.create(viewerEl, { knob: true });
+      door.place(VIEW_SURFACE);
 
-    if (!draft.pursuit) {
-      // arrived here without answering the first question — send them back
-      window.location.href = "../";
-    } else {
-      const nameField = document.getElementById("fieldName");
-      const messageField = document.getElementById("fieldMessage");
-      const shareField = document.getElementById("fieldShare");
-      const showNameField = document.getElementById("fieldShowName");
-      nameField.value = draft.name || "";
-      shareField.checked = draft.share !== false;
-      showNameField.checked = draft.showName !== false;
-
-      const form = document.getElementById("envelopeFormStep2");
-      const writeBtn = document.getElementById("writeBtn");
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const message = messageField.value.trim();
-        if (!message) { messageField.focus(); return; }
-
-        writeBtn.disabled = true;
-        writeBtn.textContent = "Writing…";
-        try {
-          await ensureAnonSession();
-          const { error } = await db.from("dreams").insert({
-            name: nameField.value.trim(),
-            pursuit: draft.pursuit,
-            message,
-            share: shareField.checked,
-            show_name: showNameField.checked
-          });
-          if (error) throw error;
-
-          sessionStorage.removeItem(DRAFT_KEY);
-          window.location.href = "../../archive/mine/";
-        } catch (err) {
-          writeBtn.disabled = false;
-          writeBtn.textContent = "Write";
-          messageField.setCustomValidity("Couldn't save your mirror — please try again.");
-          messageField.reportValidity();
-          messageField.setCustomValidity("");
-        }
+      const wall = window.MirrorWall.create({
+        el: wallEl,
+        entries,
+        storageKey: "ge_wall_" + scope,
+        onTap: view
       });
-    }
+
+      const toViewer = (b) => {
+        const dx = (wallEl.clientWidth - 390) / 2;
+        return { x: b.x - dx, y: b.y, w: b.w, h: b.h };
+      };
+
+      let current = null;
+      let busy = false;
+      let opened = false;
+
+      async function view(m) {
+        if (busy || current) return;
+        busy = true;
+        current = m;
+        m.viewing = true;
+        door.setText(m.entry.pursuit, m.entry.message, {
+          majorPx: 22 * VIEW_SURFACE.d / VIEW_POSE.w,
+          answerPx: 22
+        });
+        await door.close(0);
+        opened = false;
+        door.el.classList.remove("show-major");
+        door.pose(toViewer(wall.boxOf(m)));
+        door.el.hidden = false;
+        m.el.style.visibility = "hidden";
+        scrim.classList.add("visible");
+        await nextFrame();
+        door.el.classList.add("show-major");
+        await door.pose(VIEW_POSE, 450);
+        door.knob.focus({ preventScroll: true });
+        busy = false;
+      }
+
+      door.knob.addEventListener("click", async () => {
+        if (busy || opened) return;
+        busy = true;
+        await door.pose(null, 350);
+        await door.open(1100);
+        opened = true;
+        busy = false;
+      });
+
+      async function closeViewer() {
+        if (!current || busy) return;
+        busy = true;
+        if (opened) {
+          await door.close(600);
+          opened = false;
+        }
+        door.el.classList.remove("show-major");
+        await door.pose(toViewer(wall.boxOf(current)), 400);
+        door.el.hidden = true;
+        current.el.style.visibility = "";
+        current.viewing = false;
+        current.el.focus({ preventScroll: true });
+        current = null;
+        scrim.classList.remove("visible");
+        busy = false;
+      }
+
+      scrim.addEventListener("click", closeViewer);
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeViewer(); });
+    })();
   }
 })();

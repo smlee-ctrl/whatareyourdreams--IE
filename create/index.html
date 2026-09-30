@@ -3,12 +3,14 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Create Your Mirror</title>
+<title>Write Your Own Reflection</title>
 <link rel="stylesheet" href="../css/style.css" />
 </head>
 <body data-page="create">
 
-<main class="screen create">
+<!-- one page, three steps (Figma 52:126 → 69:337 → 69:217) so the mirror can
+     move and swing open in place between questions -->
+<main class="screen create-flow" data-step="1">
   <div class="top-section">
     <div class="safety-banner">
       <p>This is a safe, moderated space. No profanity, hate speech, or personally identifying information &middot; Content may be reviewed for safety.</p>
@@ -19,22 +21,22 @@
     </div>
   </div>
 
-  <div class="create-illustration">
-    <img src="../assets/mirror-closed.svg" alt="A closed mirror" />
+  <div class="flow-stage" aria-hidden="true">
+    <div class="flow-door-layer" id="flowDoorLayer"></div>
   </div>
 
-  <form class="create-form" id="envelopeFormStep1">
-    <h2 class="create-heading">Create your mirror</h2>
+  <form class="create-form" id="flowForm" novalidate>
+    <h2 class="create-heading">Write your own reflection</h2>
 
-    <div class="field">
+    <div class="field flow-step" data-step="1">
       <label for="fieldName">Name</label>
       <input type="text" id="fieldName" name="name" placeholder="Write your name" autocomplete="off" />
     </div>
 
-    <div class="field">
-      <label for="fieldPursuit">What did you pursue</label>
+    <div class="field flow-step" data-step="2" hidden>
+      <label for="fieldMajor">What is your major?</label>
       <div class="textarea-wrap">
-        <textarea id="fieldPursuit" name="pursuit" placeholder="Write freely. This is your safe space" required></textarea>
+        <textarea id="fieldMajor" name="major" rows="1" placeholder="Write freely. This is your safe space"></textarea>
         <div class="textarea-toolbar">
           <span class="icons">
             <img src="../assets/icon-mic.svg" alt="" aria-hidden="true" />
@@ -47,31 +49,45 @@
       </div>
     </div>
 
-    <label class="checkbox-row">
-      <input type="checkbox" id="fieldShare" checked />
-      <span class="checkbox-box"><img src="../assets/icon-checkbox.svg" alt="" aria-hidden="true" /></span>
-      <span>Share envelope</span>
-    </label>
+    <div class="field flow-step" data-step="3" hidden>
+      <label for="fieldImpact">What impact do you hope to make through your path?</label>
+      <div class="textarea-wrap">
+        <textarea id="fieldImpact" name="impact" rows="1" placeholder="Write freely. This is your safe space"></textarea>
+        <div class="textarea-toolbar">
+          <span class="icons">
+            <img src="../assets/icon-mic.svg" alt="" aria-hidden="true" />
+            <img src="../assets/icon-paperclip.svg" alt="" aria-hidden="true" />
+          </span>
+          <button type="submit" aria-label="Finish">
+            <img src="../assets/icon-send-arrow.svg" alt="" aria-hidden="true" />
+          </button>
+        </div>
+      </div>
+    </div>
 
-    <label class="checkbox-row">
-      <input type="checkbox" id="fieldShowName" checked />
-      <span class="checkbox-box"><img src="../assets/icon-checkbox.svg" alt="" aria-hidden="true" /></span>
-      <span>Show my Name?</span>
-    </label>
-
-    <div class="form-actions">
-      <button class="btn btn-back" type="button" onclick="history.back()">Back</button>
-      <button class="btn btn-write" type="submit">Write</button>
+    <div class="checkbox-list">
+      <label class="checkbox-row">
+        <input type="checkbox" id="fieldShare" checked />
+        <span class="checkbox-box"><img src="../assets/icon-checkbox.svg" alt="" aria-hidden="true" /></span>
+        <span>Share envelope</span>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" id="fieldShowName" checked />
+        <span class="checkbox-box"><img src="../assets/icon-checkbox.svg" alt="" aria-hidden="true" /></span>
+        <span>Show my Name?</span>
+      </label>
     </div>
   </form>
 
-  <footer class="footer">
-    <p>Copyright @2026</p>
-  </footer>
+  <div class="flow-actions">
+    <button class="btn btn-back" type="button" id="flowBack">Back</button>
+    <button class="btn btn-write" type="submit" form="flowForm" id="flowNext">Write</button>
+  </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="../assets/supabase-config.js"></script>
+<script src="../js/mirror.js"></script>
 <script src="../js/main.js"></script>
 </body>
 </html>

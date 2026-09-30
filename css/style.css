@@ -333,6 +333,7 @@ a { color: inherit; text-decoration: none; }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  line-height: 17px; /* Figma's 41px bar: 17px text + 24px padding */
 }
 
 .nav-bar .nav-archive,
@@ -354,8 +355,10 @@ a { color: inherit; text-decoration: none; }
 
 .footer {
   flex: 0 0 auto;
+  margin-top: auto;
   text-align: center;
-  padding: 12px 16px 20px;
+  padding: 16px;
+  border-top: 1px solid var(--black);
 }
 
 .footer p {
@@ -363,229 +366,305 @@ a { color: inherit; text-decoration: none; }
   font-family: var(--font-serif);
   font-weight: 400;
   font-size: 12px;
-  color: var(--dark-gray);
+  color: var(--mid-gray);
 }
 
-/* ---------- Screen 2: Archive ---------- */
-/* Envelopes scatter as loosely overlapping circles (nodes 52:66, 61:469,
-   63:29, 63:95) instead of a regular grid. JS assigns each one a seeded
-   pseudo-random size/position (stable across reloads for the same data)
-   and positions it absolutely inside .archive-bubbles, whose own height
-   grows to fit however many envelopes exist — the page just gets taller
-   and scrolls, matching how the mock keeps dropping more mirrors in. */
+/* ---------- Archive / My Envelope: the mirror wall (52:66, 61:469, 63:29, 63:95) ---------- */
+/* Mirrors drop in with Matter.js and can be hung on the five hooks taken
+   from the Figma archive layout. JS positions each mirror; CSS only draws. */
 
-.archive-content {
-  padding: 24px 0 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-  flex: 1 1 auto;
+.wall {
+  position: relative;
+  flex: 0 0 auto;
+  height: 672px;
+  overflow: hidden;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .archive-hint {
+  position: absolute;
+  top: 24px;
+  left: 24px;
+  right: 24px;
   margin: 0;
-  padding: 0 24px;
   font-family: var(--font-serif);
-  font-weight: 400;
   font-size: 14px;
   color: var(--mid-gray);
   text-align: center;
-}
-
-.archive-bubbles {
-  position: relative;
-  width: 100%;
-  flex: 1 1 auto;
+  pointer-events: none;
 }
 
 .archive-empty {
+  position: absolute;
+  top: 45%;
+  left: 24px;
+  right: 24px;
+  margin: 0;
   font-family: var(--font-serif);
   font-size: 13px;
   color: var(--mid-gray);
   text-align: center;
-  padding: 64px 24px;
 }
 
-.envelope-bubble {
+.wall-mirror {
   position: absolute;
-  display: block;
+  left: 0;
+  top: 0;
+  z-index: 2;
   border-radius: 50%;
   overflow: hidden;
-  padding: 0;
-  transform: translateY(-70vh);
-  opacity: 0;
-  will-change: transform, opacity, width, height;
+  cursor: grab;
+  touch-action: none;
+  will-change: transform;
 }
 
-.envelope-bubble.dropped {
-  transition: transform .7s cubic-bezier(.34, 1.56, .64, 1), opacity .5s ease;
-  transform: translateY(0);
-  opacity: 1;
-}
+.wall-mirror.is-hung { z-index: 1; }
 
-.envelope-bubble img {
+.wall-mirror.is-dragging { cursor: grabbing; z-index: 5; }
+.wall-mirror:focus-visible { outline: 2px solid var(--black); outline-offset: 3px; }
+
+/* mirror-closed.svg draws its circle at 57% of its square canvas, centred;
+   blow the art up so that circle exactly fills its (round) box */
+.mirror-art {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  left: -37.73%;
+  top: -37.73%;
+  width: 175.45%;
+  height: 175.45%;
+  max-width: none;
   pointer-events: none;
 }
 
-.envelope-bubble .bubble-img-open {
+/* free hooks show faintly only while a mirror is being dragged */
+.hook-ghost {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px dashed rgba(66, 66, 66, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s ease, border-color .2s ease, background-color .2s ease;
+}
+
+.wall.dragging .hook-ghost.free { opacity: 1; }
+.hook-ghost.target { border-color: var(--black); background: rgba(0, 0, 0, 0.04); }
+
+/* the enlarged / opened mirror sits in a 390px frame centred on the wall */
+.wall-viewer {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 390px;
+  height: 100%;
+  margin-left: -195px;
+  z-index: 30;
+  pointer-events: none;
+}
+
+.viewer-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  display: none;
+}
+
+.viewer-scrim.visible { display: block; }
+
+/* ---------- the door mirror (create flow + archive viewer) ---------- */
+/* Laid out on its open surface circle. The lid is hinged at its left edge;
+   swung -102.6deg it shows as the brown sliver in Figma's open art, with the
+   grey rim (the lid's thickness) peeking out beside it. */
+
+/* perspective is anchored at the hinge and kept shallow so the swing still
+   reads as 3D but the open lid lands close to Figma's flat, orthographic art */
+.door {
+  position: absolute;
+  transform-origin: 0 0;
+  perspective: 3000px;
+  perspective-origin: 0 50%;
+  pointer-events: auto;
+}
+
+.door[hidden] { display: none; }
+
+.door-surface {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: #c69c6d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 63:29: Bodoni Bold 22px in the mirror's gold at 20% — the answer reads as
+   carved into the glass */
+.door-answer {
+  margin: 0;
+  width: 80%;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 22px;
+  color: rgba(232, 191, 147, 0.2);
+  text-align: center;
+  word-break: break-word;
+}
+
+.door-hinge {
+  position: absolute;
+  left: -3.57%;
+  top: 43.1%;
+  width: 5.16%;
+  height: 13.8%;
+  background: linear-gradient(90deg, #b6b6b6, #d0d0d0 4%, #e3e3e3 9%, #f0f0f0 14%, #f7f7f7 21%, #fafafa 35%, #b6b6b6);
   opacity: 0;
   transition: opacity .3s ease;
 }
 
-.envelope-bubble .bubble-img-closed { transition: opacity .3s ease; }
+.door.is-open .door-hinge { opacity: 1; }
 
-.envelope-bubble.opening .bubble-img-open { opacity: 1; }
-.envelope-bubble.opening .bubble-img-closed { opacity: 0; }
-
-/* peek: hover (desktop) or first tap (touch) grows the envelope in place
-   and names the dream (the "what did you pursue" answer, node 63:66) */
-.envelope-bubble.peeking,
-.envelope-bubble.opening {
-  z-index: 30;
-  transition: transform .35s cubic-bezier(.2, .8, .3, 1.2), width .35s ease, height .35s ease, left .35s ease, top .35s ease;
-}
-
-.envelope-bubble .bubble-label,
-.envelope-bubble .bubble-message {
+.door-lid {
   position: absolute;
   inset: 0;
+  transform-origin: 0 50%;
+  transform-style: preserve-3d;
+  transition: transform var(--swing, 1100ms) cubic-bezier(.45, .05, .3, 1);
+}
+
+.door.is-open .door-lid { transform: rotateY(-102.6deg); }
+
+.door-rim,
+.door-back,
+.door-front {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+}
+
+.door-rim { background: #ccc; }
+
+.door-front {
+  overflow: hidden;
+  transform: translateZ(0.5px);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.door-back {
+  background: #a67c52;
+  transform: translateZ(calc(var(--thick, 4px) * -1)) rotateY(180deg);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* 61:469: the major, Bodoni Bold 22px black, across the middle of the glass */
+.door-major {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0 9.8%;
   display: flex;
   align-items: center;
   justify-content: center;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 22px;
+  color: var(--black);
   text-align: center;
-  padding: 16%;
+  word-break: break-word;
   opacity: 0;
-  transition: opacity .2s ease .1s;
+  transition: opacity .25s ease .15s;
   pointer-events: none;
 }
 
-.envelope-bubble .bubble-label {
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 17px;
-  color: var(--black);
-  word-break: break-word;
-}
+.door.show-major .door-major { opacity: 1; }
 
-.envelope-bubble .bubble-message {
-  font-family: var(--font-serif);
-  font-weight: 700;
-  font-size: 15px;
-  line-height: 135%;
-  color: var(--mirror-gold);
-  word-break: break-word;
-}
-
-.envelope-bubble.peeking .bubble-label,
-.envelope-bubble.opening .bubble-message { opacity: 1; }
-
-.archive-scrim {
-  position: fixed;
-  inset: 0;
-  background: transparent;
-  z-index: 20;
-  display: none;
-}
-
-.archive-scrim.visible { display: block; }
-
-/* ---------- Screens 3 & 4: Create Envelope ---------- */
-
-.create-illustration {
-  width: 390px;
-  padding: 8px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  overflow: hidden;
-}
-
-/* mirror-closed.svg's circle only fills ~57% of its own square canvas (the
-   rest is transparent margin baked into the file), and node 56:389 in
-   Figma sizes that whole asset at 416px so the drawn circle itself lands
-   at ~236px — matching that means sizing the <img> to the asset's own
-   416px, not to the circle's visible diameter, and letting the ~13px of
-   transparent margin bleed past the 390px screen edge exactly like the
-   Figma frame does (clipped by .screen's own overflow:hidden). */
-.create-illustration img {
-  width: 414px;
-  max-width: none;
-  flex-shrink: 0;
-}
-
-/* mirror reveal (Screen: answering second question, node 52:179) — the
-   closed mirror automatically opens into the carved one a beat after the
-   page loads, as the transition into answering the second question. Sized
-   to match the enlarged closed-mirror illustration above. */
-.mirror-reveal {
-  position: relative;
-  width: 414px;
-  height: 414px;
-}
-
-.mirror-reveal img {
+/* the knob (the grey dot at 85% across the glass); the hit area is larger
+   than the drawn dot so it's easy to tap */
+.door-knob {
   position: absolute;
-  inset: 0;
-  width: 100%;
+  left: 85%;
+  top: 50%;
+  width: 18%;
+  height: 18%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.door-knob:focus-visible { outline: 2px solid var(--black); outline-offset: -4px; }
+.door.is-open .door-knob { pointer-events: none; }
+
+/* ---------- Create: three questions (52:126 → 69:337 → 69:217) ---------- */
+
+/* the mirror stage is 451 / 416 / 419px tall across the three Figma steps */
+.flow-stage {
+  position: relative;
+  flex: 0 0 auto;
+  height: 451px;
+  transition: height .5s ease;
+}
+
+.create-flow[data-step="2"] .flow-stage { height: 416px; }
+.create-flow[data-step="3"] .flow-stage { height: 419px; }
+
+.flow-door-layer {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 390px;
   height: 100%;
-}
-
-.mirror-reveal .mirror-open {
-  opacity: 0;
-  transform: scale(0.9);
-  animation: mirror-open-in .6s ease-out .5s forwards;
-}
-
-.mirror-reveal .mirror-closed {
-  animation: mirror-closed-out .6s ease-out .5s forwards;
-}
-
-@keyframes mirror-open-in {
-  to { opacity: 1; transform: scale(1); }
-}
-
-@keyframes mirror-closed-out {
-  to { opacity: 0; }
+  margin-left: -195px;
 }
 
 .create-form {
-  padding: 0 20px 20px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
-  flex: 1 1 auto;
+  flex: 0 0 auto;
 }
 
+/* line heights below pin each box to Figma's measured height (Bodoni 72's
+   "normal" leading); the Bodoni Moda web font would otherwise run taller */
 .create-heading {
   font-family: var(--font-serif);
   font-weight: 700;
   font-size: 22px;
+  line-height: 26px;
   text-align: center;
   margin: 0;
 }
 
+.flow-step:not([hidden]) { animation: flow-step-in .35s ease; }
+
+@keyframes flow-step-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: none; }
+}
+
 .field { display: flex; flex-direction: column; gap: 8px; }
+.field[hidden] { display: none; }
 
 .field label {
   font-family: var(--font-serif);
   font-weight: 700;
   font-size: 14px;
+  line-height: 17px;
   color: var(--black);
 }
 
+/* Figma strokes sit inside the box, so 11px padding + 1px border = its 12px */
 .field input[type="text"] {
   border: 1px solid var(--black);
   border-radius: var(--radius-input);
   background: var(--off-white);
-  padding: 12px 14px;
+  padding: 11px;
   font-family: var(--font-serif);
   font-weight: 400;
-  font-size: 15px;
+  font-size: 14px;
+  line-height: 18px;
   color: var(--black);
   outline: none;
 }
@@ -593,25 +672,33 @@ a { color: inherit; text-decoration: none; }
 .field input[type="text"]::placeholder { color: var(--mid-gray); }
 
 .field .textarea-wrap {
-  border: 1px solid var(--black);
+  border: 1px solid var(--dark-gray);
   border-radius: var(--radius-input);
   background: var(--off-white);
-  padding: 12px 14px;
+  padding: 11px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 16px;
 }
 
+.field input[type="text"]:focus-visible,
+.field .textarea-wrap:focus-within { outline: 2px solid var(--black); outline-offset: 1px; }
+
+/* one line tall like the Figma field; grows as the answer does */
 .field textarea {
   border: none;
   outline: none;
   resize: none;
   background: transparent;
   width: 100%;
-  min-height: 72px;
+  height: 17px;
+  max-height: 120px;
+  overflow-y: hidden;
+  padding: 0;
   font-family: var(--font-serif);
   font-weight: 400;
-  font-size: 15px;
+  font-size: 14px;
+  line-height: 17px;
   color: var(--black);
 }
 
@@ -623,9 +710,16 @@ a { color: inherit; text-decoration: none; }
   justify-content: space-between;
 }
 
-.textarea-toolbar .icons { display: flex; gap: 10px; }
+.textarea-toolbar .icons { display: flex; gap: 8px; }
 .textarea-toolbar img { width: 20px; height: 20px; opacity: 0.6; }
 .textarea-toolbar button img { width: 18px; height: 20px; opacity: 0.75; }
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0;
+}
 
 .checkbox-row {
   display: flex;
@@ -650,34 +744,43 @@ a { color: inherit; text-decoration: none; }
 .checkbox-box img { width: 14px; height: 14px; opacity: 0; transition: opacity .15s ease; }
 .checkbox-row input:checked + .checkbox-box { background: var(--black); }
 .checkbox-row input:checked + .checkbox-box img { opacity: 1; filter: invert(1); }
+.checkbox-row input:focus-visible + .checkbox-box { outline: 2px solid var(--black); outline-offset: 2px; }
 
 .checkbox-row span {
   font-family: var(--font-serif);
   font-weight: 400;
   font-size: 14px;
-  color: var(--black);
+  line-height: 17px;
+  color: var(--dark-gray);
 }
 
-.form-actions {
+/* bottom bar (52:173 / 69:367): Back + Write/Finish */
+.flow-actions {
+  margin-top: auto;
   display: flex;
   gap: 12px;
-  margin-top: 4px;
+  padding: 16px 20px 24px;
+  border-top: 1px solid var(--black);
 }
 
 .btn {
   flex: 1 1 0;
-  height: 48px;
-  border-radius: var(--radius-pill);
+  min-width: 0;
+  padding: 11px;
+  border-radius: var(--radius-input);
   border: 1px solid var(--black);
-  font-family: var(--font-ui);
+  font-family: var(--font-title);
   font-weight: 400;
   font-size: 15px;
+  line-height: 19px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform .15s ease;
+  transition: transform .15s ease, opacity .15s ease;
 }
 
 .btn:active { transform: scale(0.97); }
-.btn-back { background: var(--white); color: var(--black); }
+.btn:disabled { opacity: 0.6; cursor: default; }
+.btn:disabled:active { transform: none; }
+.btn-back { background: var(--off-white); color: var(--mid-gray); }
 .btn-write { background: var(--black); color: var(--white); }
