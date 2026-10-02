@@ -1,6 +1,17 @@
 (function () {
   const page = document.body.dataset.page;
 
+  // iPhone Safari zooms in on any text field under 16px when it's tapped (the
+  // Figma fields are 14px) and never zooms back out. maximum-scale=1 stops
+  // that; iOS still lets people pinch-zoom, so it's only applied on iOS —
+  // elsewhere it would block pinch zoom.
+  const iOS = /iP(hone|od|ad)/.test(navigator.platform) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const viewport = document.querySelector('meta[name="viewport"]');
+  if (iOS && viewport && !/maximum-scale/.test(viewport.content)) {
+    viewport.content += ", maximum-scale=1";
+  }
+
   // Supabase backs the actual dreams now — window.supabase is the SDK
   // namespace (loaded via the CDN script tag), window.SUPABASE_URL/
   // SUPABASE_ANON_KEY come from assets/supabase-config.js.

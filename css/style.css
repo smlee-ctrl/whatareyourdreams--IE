@@ -29,7 +29,16 @@ html, body {
   color: var(--black);
   font-family: var(--font-serif);
   -webkit-font-smoothing: antialiased;
+  /* touch: taps register immediately with no double-tap zoom (pinch still
+     works), no grey tap flash, no rubber-band bounce, no text inflation */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
+
+a, button, input, textarea, label { touch-action: manipulation; }
 
 body {
   display: flex;
